@@ -83,3 +83,29 @@ struct MyJet : public FigterJet{
 		MainDot = MainDot + MoveDot;
 	}
 };
+
+struct Bullet {
+	int size;
+	vector <double> color;
+	Point center;
+
+	Bullet() : size(20), color({ 0.0,0.0,0.0 }), center(Point(0,0)) {};
+	Bullet(int size, vector <double> color, const Point& center) : size(size), color(color), center(center) {};
+
+	void draw(){
+		glColor3f(color[0], color[1], color[2]);
+		glBegin(GL_POLYGON);
+		glVertex2f(center.x + size, center.y);
+		glVertex2f(center.x + size * cos(M_PI / 3), center.y + size * sin(M_PI/3));
+		glVertex2f(center.x - size * cos(M_PI / 3), center.y + size * sin(M_PI / 3));
+		glVertex2f(center.x - size, center.y);
+		glVertex2f(center.x - size * cos(M_PI / 3), center.y - size * sin(M_PI / 3));
+		glVertex2f(center.x + size * cos(M_PI / 3), center.y - size * sin(M_PI / 3));
+		glEnd();
+	}
+
+	void move_bullet() {
+		center = center + Point(0, 20);
+	}
+	
+};

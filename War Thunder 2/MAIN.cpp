@@ -21,11 +21,6 @@ void Mouse(int button, int state, int x, int y);	//обработка мыши
 GLfloat windowWidth = 10;
 GLfloat windowHeight = 10;
 
-bool isWPressed = false;
-bool isAPressed = false;
-bool isSPressed = false;
-bool isDPressed = false;
-
 void DrawLine(float x1, float y1, float x2, float y2) {
     glBegin(GL_LINES);
     glColor3f(0.0, 0.0, 0.0);
@@ -105,6 +100,8 @@ public:
 
 };
 
+vector <Bullet> Bullets;
+
 enum MenuState
 {
     MAIN,
@@ -139,6 +136,10 @@ void mouseClickHandler(int button, int state, int x, int y) {
             if (Exit_Game.isButtonHovered(najatie)) {
                 exit(0);
             }
+            else {
+                Bullet a(15, { 1.0,0.0,0.0 }, myjet.MainDot);
+                Bullets.push_back(a);
+            }
             break;
         }
     }
@@ -158,16 +159,19 @@ void RenderScene(void) {
     Exit_Game.setColor(1.0, 0.0, 0.0);
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
     myjet.move_MyJet(MovePoint);
+
     switch (currentMenuState)
     {
     case MAIN:
         Start.drawButton();
         Exit_Game.drawButton();
-        //myjet.MainDot.drawPoint();
         myjet.draw();        
         break;
     case GAME_MODE_1:
         Exit_Game.drawButton();
+        for (int i = 0; i < Bullets.size(); i++) {
+            Bullets[i].draw();
+        }
         myjet.draw();
         break;
     default:
@@ -183,13 +187,18 @@ void RenderScene(void) {
 void TimerFunction(int value) {
 
 	//Перерисовываем сцену с новыми координатами
-
+    for (int i = 0; i < Bullets.size(); ++i) {
+        Bullets[i].move_bullet();
+        if (Bullets[i].center.y > 1000 || Bullets[i].center.y < -1000) {
+            Bullets.erase(Bullets.begin() + i);
+        }
+    }
 	glutPostRedisplay();
 	glutTimerFunc(10, TimerFunction, 1);
 }
 void Timer(int value) {
 
-    glutTimerFunc(0.00001, TimerFunction, 1);
+    glutTimerFunc(1, TimerFunction, 1);
 }
 
 //**********************************************************
@@ -254,6 +263,7 @@ int main(int argc, char* argv[])
     glutReshapeFunc(ChangeSize);
     glutMouseFunc(mouseClickHandler);
     glutKeyboardFunc(keyboardFunc);
+    glutTimerFunc(10, TimerFunction, 1);
     srand(time(NULL));
 
     SetupRC();
@@ -269,27 +279,23 @@ void keyboardFunc(unsigned char key, int x, int y)
         switch (key) {
         case 'w':
         case 'W':
-            isWPressed = true;
             MovePoint = Point(0, 10);
             glutPostRedisplay();
             break;
         case 'a':
         case 'A':
-            isAPressed = false;
             cout << "A is pressed" << endl;
             MovePoint = Point(-10, 0);
             glutPostRedisplay();
             break;
         case 's':
         case 'S':
-            isSPressed = false;
             cout << "S is pressed" << endl;
             MovePoint = Point(0, -10);
             glutPostRedisplay();
             break;
         case 'd':
         case 'D':
-            isDPressed = false;
             cout << "D is pressed" << endl;
             MovePoint = Point(10, 0);
             glutPostRedisplay();
@@ -297,10 +303,6 @@ void keyboardFunc(unsigned char key, int x, int y)
         case 27: // Escape key
             exit(0);
         default:
-            bool isWPressed = false;
-            bool isAPressed = false;
-            bool isSPressed = false;
-            bool isDPressed = false;
 
             MovePoint = Point(0, 0);
             glutPostRedisplay();
