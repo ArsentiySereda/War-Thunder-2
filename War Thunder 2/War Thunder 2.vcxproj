@@ -140,6 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MAIN.cpp" />
+    <ClCompile Include="Planes.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Planes.h" />
+    <ClInclude Include="Point.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Координаты для MyJet.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

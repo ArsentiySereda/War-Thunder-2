@@ -4,21 +4,27 @@
 #define _USE_MATH_DEFINES
 #include "glut.h" //необходимо указть путь к папке с файлом
 #include <math.h>
+#include "Planes.h"
+#include "Point.h"
 using namespace std;
+// Прототипы глобальных функций
+void RenderScene(void);								//вызывается при перерисовке экрана
+void SetupRC(void);									//начальные установки
+void ChangeSize(int, int);							//вызывается при изменении размеров окна
+void TimerFunction(int); //работа с таймером
+void keyboardFunc(unsigned char , int , int );		//обработка клавиатуры
+//void SkeyboardFunc(int , int , int );				//обработка клавиатуры - функциональные клавиши
+void Mouse(int button, int state, int x, int y);	//обработка мыши
+// Глобальные переменные:
+
 
 GLfloat windowWidth = 10;
 GLfloat windowHeight = 10;
-bool equal(double first, double second) {
-    return abs(first - second) < 0.001;
-}
 
-double deg_to_rad(double angle) {
-    return (angle / 180) * M_PI;
-}
-
-double rad_to_deg(double angle) {
-    return (angle / M_PI) * 180;
-}
+bool isWPressed = false;
+bool isAPressed = false;
+bool isSPressed = false;
+bool isDPressed = false;
 
 void DrawLine(float x1, float y1, float x2, float y2) {
     glBegin(GL_LINES);
@@ -45,68 +51,9 @@ void DrawOs() {
     }
 }
 
-struct Point {
-    double x;
-    double y;
-
-    Point() : x(0.), y(0.) {}
-
-    Point(double x, double y) : x(x), y(y) {}
-
-    Point(Point first, Point second) {
-        x = first.x + second.x;
-        x /= 2;
-        y = first.y + second.y;
-        y /= 2;
-    }
-
-    void rotate(const Point& center, double rad) {
-        double x_2 = center.x + cos(rad) * (x - center.x) - sin(rad) * (y - center.y);
-        double y_2 = center.y + sin(rad) * (x - center.x) + cos(rad) * (y - center.y);
-        x = x_2;
-        y = y_2;
-    }
-
-    void scale(const Point& center, double coe) {
-        x = (x - center.x) * coe + center.x;
-        y = (y - center.y) * coe + center.y;
-    }
-
-    void reflect(const Point& center) {
-        scale(center, -1);
-    }
-
-    void drawPoint() {
-        // Установка толщины линии
-        glPointSize(3);
-        glBegin(GL_POINTS);
-        glColor3f(0.0, 0.0, 0.0); // Белый цвет
-        glVertex2f(x, y);
-        glEnd();
-    }
-};
-
-double operator*(const Point first, const Point second) {
-    return first.x * second.x + first.y * second.y;
-}
-
-Point operator+(const Point first, const Point second) {
-    return { first.x + second.x, first.y + second.y };
-}
-
-Point operator-(const Point first, const Point second) {
-    return { first.x - second.x, first.y - second.y };
-}
-
-bool operator==(const Point& first, const Point& second) {
-    return equal(first.x, second.x) && equal(first.y, second.y);
-}
-
-bool operator!=(const Point& first, const Point& second) { return !(first == second); }
-
-double dist(const Point& first, const Point& second) {
-    return sqrt(pow((first.x - second.x), 2) + pow((first.y - second.y), 2));
-}
+MyJet myjet;
+bool isDraggingRMB = false; // Flag to track RMB dragging
+Point dragStartPointRMB; // Point where RMB dragging starts
 
 
 class Button {
@@ -166,15 +113,16 @@ enum MenuState
 MenuState currentMenuState = MAIN;
 
 Button Start(-100, 10, 200, 80, "START");
-Button Exit_Game(-150, -120, 300, 80, "EXIT GAME");
+Button Exit_Game(690, -980, 300, 80, "EXIT GAME");
+Point MovePoint(0.0,0.0);
 
 void mouseClickHandler(int button, int state, int x, int y) {
     // Проверка нажатия левой кнопки мыши
     setlocale(LC_ALL, "rus");
     double X = (x - 500) * 2, Y = 1000 - (y * 2);
 
-    Point najatie(X, Y);
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+    Point najatie = Point(X, Y);
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
     {
         switch (currentMenuState)
         {
@@ -188,33 +136,39 @@ void mouseClickHandler(int button, int state, int x, int y) {
             }
             break;
         case GAME_MODE_1:
-
+            if (Exit_Game.isButtonHovered(najatie)) {
+                exit(0);
+            }
             break;
         }
     }
 }
 
 
+
 //**********************************************************
 // Рисование сцены
 void RenderScene(void) {
     setlocale(LC_ALL, "rus");
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f); // Цвет фона окна
+    glClearColor(0.5f, 0.9f, 0.95f, 0.0f); // Цвет фона окна
     glClear(GL_COLOR_BUFFER_BIT);
     DrawOs();
     Start.setColor(0.0, 1.0, 0.0);
     Start.set_text_colors(0.0, 0.0, 0.0);
     Exit_Game.setColor(1.0, 0.0, 0.0);
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
-
+    myjet.move_MyJet(MovePoint);
     switch (currentMenuState)
     {
     case MAIN:
         Start.drawButton();
-        Start.drawButton();
         Exit_Game.drawButton();
+        //myjet.MainDot.drawPoint();
+        myjet.draw();        
         break;
     case GAME_MODE_1:
+        Exit_Game.drawButton();
+        myjet.draw();
         break;
     default:
         break;
@@ -226,15 +180,16 @@ void RenderScene(void) {
 //**********************************************************
 // Вызывается по таймеру библиотекой GLUT в спокойном состоянии,
 // когда не меняются размеры окна приложения и нет перемещений параметр - номер таймера
-//void TimerFunction(int value) {
-//
-//	//Перерисовываем сцену с новыми координатами
-//	glutPostRedisplay();
-//	glutTimerFunc(10, TimerFunction, 1);
-//}
+void TimerFunction(int value) {
+
+	//Перерисовываем сцену с новыми координатами
+
+	glutPostRedisplay();
+	glutTimerFunc(10, TimerFunction, 1);
+}
 void Timer(int value) {
 
-    //glutTimerFunc(0.00001, TimerFunction, 1);
+    glutTimerFunc(0.00001, TimerFunction, 1);
 }
 
 //**********************************************************
@@ -294,10 +249,11 @@ int main(int argc, char* argv[])
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(1000, 1000); // Размер окна
-    glutCreateWindow("Template"); // Создание окна, его название
+    glutCreateWindow("War Thunder 2"); // Создание окна, его название
     glutDisplayFunc(RenderScene);
     glutReshapeFunc(ChangeSize);
     glutMouseFunc(mouseClickHandler);
+    glutKeyboardFunc(keyboardFunc);
     srand(time(NULL));
 
     SetupRC();
@@ -306,36 +262,71 @@ int main(int argc, char* argv[])
 }
 
 
-///* Обрабатывает сообщения от клавиатуры */
-//void keyboardFunc(unsigned char key, int x, int y)
-//{
-//   
-//  if( key == 27  )
-//	exit(0);
-//	
-//}
-///* Обрабатывает сообщения от клавиатуры функциональные клавиши */
+/* Обрабатывает сообщения от клавиатуры */
+void keyboardFunc(unsigned char key, int x, int y)
+{
+    if (currentMenuState != MAIN) {
+        switch (key) {
+        case 'w':
+        case 'W':
+            isWPressed = true;
+            MovePoint = Point(0, 10);
+            glutPostRedisplay();
+            break;
+        case 'a':
+        case 'A':
+            isAPressed = false;
+            cout << "A is pressed" << endl;
+            MovePoint = Point(-10, 0);
+            glutPostRedisplay();
+            break;
+        case 's':
+        case 'S':
+            isSPressed = false;
+            cout << "S is pressed" << endl;
+            MovePoint = Point(0, -10);
+            glutPostRedisplay();
+            break;
+        case 'd':
+        case 'D':
+            isDPressed = false;
+            cout << "D is pressed" << endl;
+            MovePoint = Point(10, 0);
+            glutPostRedisplay();
+            break;
+        case 27: // Escape key
+            exit(0);
+        default:
+            bool isWPressed = false;
+            bool isAPressed = false;
+            bool isSPressed = false;
+            bool isDPressed = false;
+
+            MovePoint = Point(0, 0);
+            glutPostRedisplay();
+            break;
+        }
+    }
+}
+/* Обрабатывает сообщения от клавиатуры функциональные клавиши */
 //void SkeyboardFunc(int key, int x, int y)
 //{
 //
-//	 if( key == GLUT_KEY_UP  ){ xstep = 0;  ystep = 3;}
-//	 if( key == GLUT_KEY_LEFT  ){ xstep = -3;  ystep = 0;}
-//	if( key == GLUT_KEY_DOWN  ){ xstep = 0;  ystep = -3;}
-//	if( key == GLUT_KEY_RIGHT  ){ xstep = 3;  ystep = 0;}
+//	 if( key == GLUT_KEY_UP  ){ MovePoint = Point(0, 0); }
+//	 if( key == GLUT_KEY_LEFT  ){ MovePoint = Point(0, 0); }
+//	if( key == GLUT_KEY_DOWN  ){ MovePoint = Point(0, 0); }
+//	if( key == GLUT_KEY_RIGHT  ){ MovePoint = Point(0, 0); }
 //	
 //}
 ///* Обрабатывает сообщения от мыши */
 //void Mouse(int button, int state, int x, int y)
 //{
-//  if( state == GLUT_DOWN ) {
-//    switch( button ) {
-//      case GLUT_LEFT_BUTTON:
-//        Seed = random(RAND_MAX);
-//        break;
-//      case GLUT_RIGHT_BUTTON:
-//        FillFlag = !FillFlag;
-//        break;
+//    if (currentMenuState != MAIN) {
+//        setlocale(LC_ALL, "rus");
+//        double X = (x - 500) * 2, Y = 1000 - (y * 2);
+//        najatie = Point(X, Y);
+//        
+//        
+//        
 //    }
-//    glutPostRedisplay();
-//  }
 //}
