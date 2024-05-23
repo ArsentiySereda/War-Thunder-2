@@ -80,3 +80,28 @@ bool operator!=(const Point& first, const Point& second) { return !(first == sec
 double dist(const Point& first, const Point& second) {
     return sqrt(pow((first.x - second.x), 2) + pow((first.y - second.y), 2));
 }
+
+//bool is_line_intersects(const Point& p1, const Point& p2, const Point& q1, const Point& q2) {
+//    // Векторы из p1 к p2 и q1 к q2
+//    Point vec_p1_p2 = p2 - p1;
+//    Point vec_q1_q2 = q2 - q1;
+//    // Определители
+//    double determinant = vec_p1_p2.x * vec_q1_q2.y - vec_p1_p2.y * vec_q1_q2.x;
+//    // Проверка параллельности
+//    if (determinant == 0) {
+//        return false;
+//    }
+//    // Проверка пересечения по X
+//    double t = (vec_q1_q2.x * (p1.y - q1.y) - vec_q1_q2.y * (p1.x - q1.x)) / determinant;
+//    if (t < 0 || t > 1) {
+//        return false;
+//    }
+//    // Проверка пересечения по Y
+//    double u = (vec_p1_p2.x * (q1.y - p1.y) - vec_p1_p2.y * (q1.x - p1.x)) / determinant;
+//    if (u < 0 || u > 1) {
+//        return false;
+//    }
+//    return true;
+//}
+
+

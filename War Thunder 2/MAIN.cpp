@@ -14,12 +14,12 @@ void ChangeSize(int, int);							//вызывается при изменении размеров окна
 void TimerFunction(int); //работа с таймером
 void keyboardFunc(unsigned char , int , int );		//обработка клавиатуры
 //void SkeyboardFunc(int , int , int );				//обработка клавиатуры - функциональные клавиши
-void Mouse(int button, int state, int x, int y);	//обработка мыши
+//void Mouse(int button, int state, int x, int y);	//обработка мыши
 // Глобальные переменные:
-
 
 GLfloat windowWidth = 10;
 GLfloat windowHeight = 10;
+int count_to_create = 0;
 
 void DrawLine(float x1, float y1, float x2, float y2) {
     glBegin(GL_LINES);
@@ -46,10 +46,8 @@ void DrawOs() {
     }
 }
 
-MyJet myjet;
-bool isDraggingRMB = false; // Flag to track RMB dragging
-Point dragStartPointRMB; // Point where RMB dragging starts
-
+MyJet myjet = MyJet(Point(0,-800), 20);
+vector <JetLvl1> Enemies1 = {JetLvl1(Point(((rand() % 2000) - 1000), 700))};
 
 class Button {
 private:
@@ -100,17 +98,20 @@ public:
 
 };
 
-vector <Bullet> Bullets;
-
+vector <Bullet> MyBullets;
+vector <Bullet> EnemyBullets;
 enum MenuState
 {
     MAIN,
-    GAME_MODE_1
+    GAME_MODE_1,
+    LOSE_STATE,
+    WIN_STATE
 };
 MenuState currentMenuState = MAIN;
 
 Button Start(-100, 10, 200, 80, "START");
 Button Exit_Game(690, -980, 300, 80, "EXIT GAME");
+Button Health(-900, -980, 100, 80, "HP " + to_string(myjet.HP));
 Point MovePoint(0.0,0.0);
 
 void mouseClickHandler(int button, int state, int x, int y) {
@@ -134,11 +135,15 @@ void mouseClickHandler(int button, int state, int x, int y) {
             break;
         case GAME_MODE_1:
             if (Exit_Game.isButtonHovered(najatie)) {
-                exit(0);
+                MovePoint = Point(0, 0);
+                myjet = MyJet(Point(0, -700));
+                currentMenuState = MAIN;
+                glutPostRedisplay();
             }
             else {
                 Bullet a(15, { 1.0,0.0,0.0 }, myjet.MainDot);
-                Bullets.push_back(a);
+                MyBullets.push_back(a);
+                glutPostRedisplay();
             }
             break;
         }
@@ -153,26 +158,92 @@ void RenderScene(void) {
     setlocale(LC_ALL, "rus");
     glClearColor(0.5f, 0.9f, 0.95f, 0.0f); // Цвет фона окна
     glClear(GL_COLOR_BUFFER_BIT);
-    DrawOs();
+    //DrawOs();
     Start.setColor(0.0, 1.0, 0.0);
     Start.set_text_colors(0.0, 0.0, 0.0);
     Exit_Game.setColor(1.0, 0.0, 0.0);
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
-    myjet.move_MyJet(MovePoint);
-
+    Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP));
+    Health.setColor(0.0, 1.0, 0.0);
+    
+    
     switch (currentMenuState)
     {
     case MAIN:
         Start.drawButton();
         Exit_Game.drawButton();
-        myjet.draw();        
+        myjet.draw();     
         break;
     case GAME_MODE_1:
-        Exit_Game.drawButton();
-        for (int i = 0; i < Bullets.size(); i++) {
-            Bullets[i].draw();
+        for (int i = 0; i < MyBullets.size(); ++i) {
+            MyBullets[i].move_bullet(15);
+            for (int j = 0; j < Enemies1.size(); ++j) {
+                if (MyBullets.size() != 0) {
+                    if (Enemies1[j].is_hit(MyBullets[i].center)) {
+                        cout << "Popadaniye vo vraga" << endl;
+                        Enemies1[j].HP--;
+                        cout << "Enemy has " << Enemies1[j].HP << " health" << endl;
+                        if (Enemies1[j].HP == 0) {
+                            Enemies1.erase(Enemies1.begin() + j);
+
+                            break;
+                        }
+                        MyBullets.erase(MyBullets.begin() + i);
+                        glutPostRedisplay();
+                    }
+                    else if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
+                        MyBullets.erase(MyBullets.begin() + i);
+                        glutPostRedisplay();
+                    }
+                }
+                else { break; }
+            }
         }
+        for (int i = 0; i < EnemyBullets.size(); ++i) {
+            EnemyBullets[i].move_bullet(-10);
+            if (myjet.is_hit(EnemyBullets[i].center)) {
+                cout << "Popadaniye" << endl;
+                myjet.HP--;
+                cout << "Ostalos " << myjet.HP << " of health" << endl;
+                EnemyBullets.erase(EnemyBullets.begin() + i);
+                glutPostRedisplay();
+            }
+            else if ((EnemyBullets[i].center.y > 1000 || EnemyBullets[i].center.y < -1000)) {
+                EnemyBullets.erase(EnemyBullets.begin() + i);
+            }
+
+        }
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            if (Enemies1[i].count_to_shot == 75) {
+                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+                Enemies1[i].count_to_shot = 0;
+            }
+            if (myjet.is_intersect(Enemies1[i])) {
+                cout << "Proizoshlo stolknoveniye, vi proigraly" << endl;
+                currentMenuState = LOSE_STATE;
+            }
+        }
+        for (int i = 0; i < MyBullets.size(); i++) {
+            MyBullets[i].draw();
+        }
+        for (int i = 0; i < EnemyBullets.size(); i++) {
+            EnemyBullets[i].draw();
+        }
+        for (int i = 0; i < Enemies1.size(); i++) {
+            Enemies1[i].draw();
+        }
+        if (myjet.HP == 0) {
+            currentMenuState = LOSE_STATE;
+            glutPostRedisplay();
+        }
+        Exit_Game.drawButton();
+        Health.drawButton();
         myjet.draw();
+        glutPostRedisplay();
+        break;
+    case LOSE_STATE:
+        break;
+    case WIN_STATE:
         break;
     default:
         break;
@@ -185,20 +256,26 @@ void RenderScene(void) {
 // Вызывается по таймеру библиотекой GLUT в спокойном состоянии,
 // когда не меняются размеры окна приложения и нет перемещений параметр - номер таймера
 void TimerFunction(int value) {
-
-	//Перерисовываем сцену с новыми координатами
-    for (int i = 0; i < Bullets.size(); ++i) {
-        Bullets[i].move_bullet();
-        if (Bullets[i].center.y > 1000 || Bullets[i].center.y < -1000) {
-            Bullets.erase(Bullets.begin() + i);
+    if (currentMenuState == GAME_MODE_1) {
+        myjet.move_Jet(MovePoint);
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            Enemies1[i].move_Jet(Point(0, -3));
+            Enemies1[i].count_to_shot++;
+        }
+        count_to_create++;
+        if (count_to_create == 200 || Enemies1.size() == 0) {
+            Enemies1.push_back(JetLvl1(Point(((rand() % 2000)-1000), 800)));
+            if (count_to_create == 200) {
+                count_to_create = 0;
+            }
         }
     }
-	glutPostRedisplay();
-	glutTimerFunc(10, TimerFunction, 1);
+    glutPostRedisplay();
+    glutTimerFunc(25, TimerFunction, 25);
 }
 void Timer(int value) {
 
-    glutTimerFunc(1, TimerFunction, 1);
+    glutTimerFunc(25, TimerFunction, 25);
 }
 
 //**********************************************************
@@ -263,7 +340,7 @@ int main(int argc, char* argv[])
     glutReshapeFunc(ChangeSize);
     glutMouseFunc(mouseClickHandler);
     glutKeyboardFunc(keyboardFunc);
-    glutTimerFunc(10, TimerFunction, 1);
+    glutTimerFunc(25, TimerFunction, 25);
     srand(time(NULL));
 
     SetupRC();
@@ -279,31 +356,38 @@ void keyboardFunc(unsigned char key, int x, int y)
         switch (key) {
         case 'w':
         case 'W':
-            MovePoint = Point(0, 10);
+            cout << "W is pressed" << endl;
+            MovePoint = Point(0, 15);
             glutPostRedisplay();
             break;
         case 'a':
         case 'A':
             cout << "A is pressed" << endl;
-            MovePoint = Point(-10, 0);
+            MovePoint = Point(-15, 0);
             glutPostRedisplay();
             break;
         case 's':
         case 'S':
             cout << "S is pressed" << endl;
-            MovePoint = Point(0, -10);
+            MovePoint = Point(0, -15);
             glutPostRedisplay();
             break;
         case 'd':
         case 'D':
             cout << "D is pressed" << endl;
-            MovePoint = Point(10, 0);
+            MovePoint = Point(15, 0);
             glutPostRedisplay();
             break;
         case 27: // Escape key
             exit(0);
+            break;
+        case 32:
+            /*MyBullets.push_back(Bullet(15, { 1.0,0.0,0.0 }, myjet.MainDot));
+            isKeyPressed = false;
+            MovePoint = Point(0, 0);
+            glutPostRedisplay();
+            break;*/
         default:
-
             MovePoint = Point(0, 0);
             glutPostRedisplay();
             break;
