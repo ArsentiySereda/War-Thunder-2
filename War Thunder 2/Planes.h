@@ -250,8 +250,6 @@ struct Bullet {
 
 };
 
-
-
 struct MyJet : public FigterJet{
 	MyJet() : FigterJet() {};
 	MyJet(const Point& MainPoint) : FigterJet(MainPoint) {};
@@ -372,3 +370,4 @@ struct MyJet : public FigterJet{
 		return false;
 	}
 };
+

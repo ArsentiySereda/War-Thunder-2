@@ -50,7 +50,7 @@ void DrawOs() {
 
 MyJet myjet = MyJet(Point(0,-800), 20);
 vector <JetLvl1> Enemies1 = {JetLvl1(Point(((rand() % 1800) - 900), 700), 5)};
-vector <JetLvl2> Enemies2 = {JetLvl2(Point(((rand() % 1800) - 900), 700), 7)};
+vector <JetLvl2> Enemies2;
 
 class Button {
 private:
@@ -174,6 +174,19 @@ void mouseClickHandler(int button, int state, int x, int y) {
                 glutPostRedisplay();
             }
             break;
+        case GAME_MODE_BOSS:
+            if (Exit_Game.isButtonHovered(najatie)) {
+                MovePoint = Point(0, 0);
+                myjet = MyJet(Point(0, -700));
+                currentMenuState = MAIN;
+                glutPostRedisplay();
+            }
+            else {
+                Bullet a(15, { 1.0,0.0,0.0 }, myjet.MainDot);
+                MyBullets.push_back(a);
+                glutPostRedisplay();
+            }
+            break;
         }
     }
 }
@@ -186,7 +199,6 @@ void RenderScene(void) {
     setlocale(LC_ALL, "rus");
     glClearColor(0.5f, 0.9f, 0.95f, 0.0f); // Цвет фона окна
     glClear(GL_COLOR_BUFFER_BIT);
-    //DrawOs();
     Start.setColor(0.0, 1.0, 0.0);
     Start.set_text_colors(0.0, 0.0, 0.0);
     Exit_Game.setColor(1.0, 0.0, 0.0);
@@ -196,7 +208,10 @@ void RenderScene(void) {
     Health.setColor(0.0, 1.0, 0.0);
     Kills.setColor(0.0, 0.0, 1.0);
     bool flag = false;
-
+    vector <int> delete_mybullets;
+    vector <int> delete_enemybullets;
+    vector <int> delete_enemy1;
+    vector <int> delete_enemy2;
     switch (currentMenuState)
     {
     case MAIN:
@@ -205,7 +220,7 @@ void RenderScene(void) {
         myjet.draw();     
         break;
     case GAME_MODE_1:
-        for (int i = 0; i < MyBullets.size(); ++i) {
+        /*for (int i = 0; i < MyBullets.size(); ++i) {
             MyBullets[i].move_bullet(15);
             for (int j = 0; j < Enemies1.size(); ++j) {
                 if (MyBullets.size() != 0) {
@@ -263,7 +278,58 @@ void RenderScene(void) {
                 cout << "Proizoshlo stolknoveniye, vi proigraly" << endl;
                 currentMenuState = LOSE_STATE;
             }
+        }*/
+        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
+            MyBullets[i].move_bullet(15);
+            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
         }
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
+                currentMenuState = LOSE_STATE;
+                glutPostRedisplay();
+            }
+            if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
+                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+                Enemies1[i].count_to_shot = 0;
+            }
+            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                if (Enemies1[i].is_hit(MyBullets[j].center)) {
+                    delete_mybullets.push_back(j);
+                    Enemies1[i].HP--;
+                    if (Enemies1[i].HP == 0) {
+                        delete_enemy1.push_back(i);
+                        EnemyLvl1count++;
+                        if (EnemyLvl1count == 2) {
+                            currentMenuState = GAME_MODE_2;
+                            glutPostRedisplay();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
+            Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
+        }
+        for (int i = 0; i < delete_mybullets.size(); ++i) {
+            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
+        }
+        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+            EnemyBullets[i].move_bullet(-15);
+            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
+            else if (myjet.is_hit(EnemyBullets[i].center)) {
+                delete_enemybullets.push_back(i);
+                myjet.HP--;
+                if (myjet.HP == 0) {
+                    currentMenuState = LOSE_STATE;
+                    glutPostRedisplay();
+                }
+            }
+        }
+        for (int i = 0; i < delete_enemybullets.size(); ++i) {
+            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+        }
+
         for (int i = 0; i < MyBullets.size(); i++) {
             MyBullets[i].draw();
         }
@@ -277,10 +343,6 @@ void RenderScene(void) {
             EnemyHP.set_text_colors(1.0, 1.0, 1.0);
             EnemyHP.drawButton();
         }
-        if (myjet.HP == 0) {
-            currentMenuState = LOSE_STATE;
-            glutPostRedisplay();
-        }
         Exit_Game.drawButton();
         Health.drawButton();
         Kills.drawButton();
@@ -288,107 +350,177 @@ void RenderScene(void) {
         glutPostRedisplay();
         break;
     case GAME_MODE_2:
-        for (int i = 0; i < MyBullets.size(); ++i) {
+        //for (int i = 0; i < MyBullets.size(); ++i) {
+        //    MyBullets[i].move_bullet(15);
+        //    for (int j = 0; j < Enemies1.size(); ++j) {
+        //        if (MyBullets.size() != 0) {
+        //            /*if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
+        //                MyBullets.erase(MyBullets.begin() + i);
+        //                glutPostRedisplay();
+        //            }*/
+        //            if (Enemies1[j].is_hit(MyBullets[i].center)) {
+        //                cout << "Popadaniye vo vraga" << endl;
+        //                Enemies1[j].HP--;
+        //                cout << "Enemy has " << Enemies1[j].HP << " health" << endl;
+        //                if (Enemies1[j].HP == 0) {
+        //                    Enemies1.erase(Enemies1.begin() + j);
+        //                    MyBullets.erase(MyBullets.begin() + i);
+        //                    EnemyLvl1count++;
+        //                    if (EnemyLvl1count == 5) {
+        //                        currentMenuState = GAME_MODE_1;
+        //                        EnemyLvl1count = 0;
+        //                        glutPostRedisplay();
+        //                    }
+        //                    break;
+        //                }
+        //                if (MyBullets.size() != 0) {
+        //                    MyBullets.erase(MyBullets.begin() + i);
+        //                }
+        //                glutPostRedisplay();
+        //            }
+        //        }
+        //        else {
+        //            flag = true;
+        //            break;
+        //        }
+        //    }
+        //    if (flag) { break; }
+        //    for (int j = 0; j < Enemies2.size(); ++j) {
+        //        if (MyBullets.size() != 0) {
+        //            if (Enemies2[j].is_hit(MyBullets[i].center)) {
+        //                cout << "Popadaniye vo vraga" << endl;
+        //                Enemies2[j].HP--;
+        //                cout << "Enemy has " << Enemies2[j].HP << " health" << endl;
+        //                if (Enemies2[j].HP == 0) {
+        //                    Enemies2.erase(Enemies2.begin() + j);
+        //                    MyBullets.erase(MyBullets.begin() + i);
+        //                    EnemyLvl2count++;
+        //                    if (EnemyLvl2count == 5) {
+        //                        currentMenuState = GAME_MODE_BOSS;
+        //                        glutPostRedisplay();
+        //                    }
+        //                    break;
+        //                }
+        //                if (MyBullets.size() != 0) {
+        //                    MyBullets.erase(MyBullets.begin() + i);
+        //                }
+        //                glutPostRedisplay();
+        //            }
+        //        }
+        //        else {
+        //            flag = true;
+        //            break;
+        //        }
+        //    }
+        //    if (flag) { break; }
+        //}
+        //for (int i = 0; i < EnemyBullets.size(); ++i) {
+        //    EnemyBullets[i].move_bullet(-15);
+        //    if (myjet.is_hit(EnemyBullets[i].center)) {
+        //        myjet.HP--;
+        //        EnemyBullets.erase(EnemyBullets.begin() + i);
+        //        glutPostRedisplay();
+        //    }
+        //    else if ((EnemyBullets[i].center.y > 1000 || EnemyBullets[i].center.y < -1000)) {
+        //        EnemyBullets.erase(EnemyBullets.begin() + i);
+        //    }
+        //}
+        //for (int i = 0; i < Enemies1.size(); ++i) {
+        //    if (Enemies1[i].count_to_shot == 60) {
+        //        EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+        //        Enemies1[i].count_to_shot = 0;
+        //    }
+        //    if (myjet.is_intersect(Enemies1[i])) {
+        //        cout << "Proizoshlo stolknoveniye, vi proigraly" << endl;
+        //        currentMenuState = LOSE_STATE;
+        //    }
+        //}
+        //
+        //for (int i = 0; i < Enemies2.size(); ++i) {
+        //    if (Enemies2[i].count_to_shot == 40) {
+        //        EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies2[i].MainDot));
+        //        Enemies2[i].count_to_shot = 0;
+        //    }
+        //    if (myjet.is_intersect(Enemies2[i])) {
+        //        cout << "Proizoshlo stolknoveniye, vi proigraly 2" << endl;
+        //        
+        //    }
+        //}
+        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
             MyBullets[i].move_bullet(15);
-            for (int j = 0; j < Enemies1.size(); ++j) {
-                if (MyBullets.size() != 0) {
-                    /*if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
-                        MyBullets.erase(MyBullets.begin() + i);
-                        glutPostRedisplay();
-                    }*/
-                    if (Enemies1[j].is_hit(MyBullets[i].center)) {
-                        cout << "Popadaniye vo vraga" << endl;
-                        Enemies1[j].HP--;
-                        cout << "Enemy has " << Enemies1[j].HP << " health" << endl;
-                        if (Enemies1[j].HP == 0) {
-                            Enemies1.erase(Enemies1.begin() + j);
-                            MyBullets.erase(MyBullets.begin() + i);
-                            EnemyLvl1count++;
-                            if (EnemyLvl1count == 5) {
-                                currentMenuState = GAME_MODE_1;
-                                EnemyLvl1count = 0;
-                                glutPostRedisplay();
-                            }
-                            break;
-                        }
-                        if (MyBullets.size() != 0) {
-                            MyBullets.erase(MyBullets.begin() + i);
-                        }
-                        glutPostRedisplay();
-                    }
-                }
-                else {
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag) { break; }
-            for (int j = 0; j < Enemies2.size(); ++j) {
-                if (MyBullets.size() != 0) {
-                    /*if ((MyBullets[i].center.y > 2000 || MyBullets[i].center.y < -2000)) {
-                        MyBullets.erase(MyBullets.begin() + i);
-                        glutPostRedisplay();
-                    }*/
-                    if (Enemies2[j].is_hit(MyBullets[i].center)) {
-                        cout << "Popadaniye vo vraga" << endl;
-                        Enemies2[j].HP--;
-                        cout << "Enemy has " << Enemies2[j].HP << " health" << endl;
-                        if (Enemies2[j].HP == 0) {
-                            Enemies2.erase(Enemies2.begin() + j);
-                            MyBullets.erase(MyBullets.begin() + i);
-                            EnemyLvl2count++;
-                            if (EnemyLvl2count == 5) {
-                                currentMenuState = GAME_MODE_BOSS;
-                                glutPostRedisplay();
-                            }
-                            break;
-                        }
-                        if (MyBullets.size() != 0) {
-                            MyBullets.erase(MyBullets.begin() + i);
-                        }
-                        glutPostRedisplay();
-                    }
-                }
-                else {
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag) { break; }
-        }
-        for (int i = 0; i < EnemyBullets.size(); ++i) {
-            EnemyBullets[i].move_bullet(-15);
-            if (myjet.is_hit(EnemyBullets[i].center)) {
-                myjet.HP--;
-                EnemyBullets.erase(EnemyBullets.begin() + i);
-                glutPostRedisplay();
-            }
-            else if ((EnemyBullets[i].center.y > 1000 || EnemyBullets[i].center.y < -1000)) {
-                EnemyBullets.erase(EnemyBullets.begin() + i);
-            }
-
+            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
         }
         for (int i = 0; i < Enemies1.size(); ++i) {
-            if (Enemies1[i].count_to_shot == 60) {
+            if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
+                currentMenuState = LOSE_STATE;
+                glutPostRedisplay();
+            }
+            if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
                 EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
                 Enemies1[i].count_to_shot = 0;
             }
-            if (myjet.is_intersect(Enemies1[i])) {
-                cout << "Proizoshlo stolknoveniye, vi proigraly" << endl;
-                currentMenuState = LOSE_STATE;
+            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                if (Enemies1[i].is_hit(MyBullets[j].center)) {
+                    delete_mybullets.push_back(j);
+                    Enemies1[i].HP--;
+                    if (Enemies1[i].HP == 0) {
+                        delete_enemy1.push_back(i);
+                        EnemyLvl1count++;
+                        break;
+                    }
+                }
             }
         }
-        
         for (int i = 0; i < Enemies2.size(); ++i) {
-            if (Enemies2[i].count_to_shot == 40) {
+            if (myjet.is_intersect(Enemies2[i])) {//проверка столкновения самолетов
+                currentMenuState = LOSE_STATE;
+                glutPostRedisplay();
+            }
+            if (Enemies2[i].count_to_shot == 50) {//стрельба каждого противника
                 EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies2[i].MainDot));
                 Enemies2[i].count_to_shot = 0;
             }
-            if (myjet.is_intersect(Enemies2[i])) {
-                cout << "Proizoshlo stolknoveniye, vi proigraly 2" << endl;
-                
+            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                if (Enemies2[i].is_hit(MyBullets[j].center)) {
+                    delete_mybullets.push_back(j);
+                    Enemies2[i].HP--;
+                    if (Enemies2[i].HP == 0) {
+                        delete_enemy2.push_back(i);
+                        EnemyLvl2count++;
+                        if (EnemyLvl2count == 3) {
+                            currentMenuState = GAME_MODE_BOSS;
+                            glutPostRedisplay();
+                        }
+                        break;
+                    }
+                }
             }
         }
+        for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
+            Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
+        }
+        for (int i = 0; i < delete_enemy2.size(); ++i) { // удаление пуль и противников
+            Enemies2.erase(Enemies2.begin() + delete_enemy2[i]);
+        }
+        for (int i = 0; i < delete_mybullets.size(); ++i) {
+            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
+        }
+        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+            EnemyBullets[i].move_bullet(-15);
+            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
+            else if (myjet.is_hit(EnemyBullets[i].center)) {
+                delete_enemybullets.push_back(i);
+                myjet.HP--;
+                if (myjet.HP == 0) {
+                    currentMenuState = LOSE_STATE;
+                    glutPostRedisplay();
+                }
+            }
+        }
+        for (int i = 0; i < delete_enemybullets.size(); ++i) {
+            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+        }
+
         for (int i = 0; i < MyBullets.size(); i++) {
             MyBullets[i].draw();
         }
@@ -409,10 +541,29 @@ void RenderScene(void) {
             EnemyHP.set_text_colors(1.0, 1.0, 1.0);
             EnemyHP.drawButton();
         }
-        if (myjet.HP == 0) {
-            currentMenuState = LOSE_STATE;
-            glutPostRedisplay();
+
+        Exit_Game.drawButton();
+        Health.drawButton();
+        Kills.drawButton();
+        myjet.draw();
+        glutPostRedisplay();
+        break;
+    case GAME_MODE_BOSS:
+        for (int i = 0; i < Enemies1.size(); i++) {
+            Enemies1[i].draw();
+            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+            EnemyHP.setColor(0.15, 0.27, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
         }
+        for (int i = 0; i < Enemies2.size(); i++) {
+            Enemies2[i].draw();
+            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+            EnemyHP.setColor(0.56, 0.2, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
+        }
+
         Exit_Game.drawButton();
         Health.drawButton();
         Kills.drawButton();
@@ -420,6 +571,30 @@ void RenderScene(void) {
         glutPostRedisplay();
         break;
     case LOSE_STATE:
+        /*for (int i = 0; i < MyBullets.size(); i++) {
+            MyBullets[i].draw();
+        }
+        for (int i = 0; i < EnemyBullets.size(); i++) {
+            EnemyBullets[i].draw();
+        }
+        for (int i = 0; i < Enemies1.size(); i++) {
+            Enemies1[i].draw();
+            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+            EnemyHP.setColor(0.15, 0.27, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
+        }
+        for (int i = 0; i < Enemies2.size(); i++) {
+            Enemies2[i].draw();
+            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+            EnemyHP.setColor(0.56, 0.2, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
+        }*/
+        Health.drawButton();
+        Kills.drawButton();
+        Exit_Game.drawButton();
+        myjet.draw();
         break;
     case WIN_STATE:
         break;
@@ -441,11 +616,11 @@ void TimerFunction(int value) {
             Enemies1[i].count_to_shot++;
             Enemies1[i].direction_change++;
             if (Enemies1[i].direction_change == 25) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 4);
                 Enemies1[i].direction_change = 0;
             }
             if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 4);
                 Enemies1[i].direction_change = 0;
             }
         }
@@ -464,11 +639,11 @@ void TimerFunction(int value) {
             Enemies1[i].count_to_shot++;
             Enemies1[i].direction_change++;
             if (Enemies1[i].direction_change == 25) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 5);
                 Enemies1[i].direction_change = 0;
             }
             if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 5);
                 Enemies1[i].direction_change = 0;
             }
         }
@@ -477,11 +652,11 @@ void TimerFunction(int value) {
             Enemies2[i].count_to_shot++;
             Enemies2[i].direction_change++;
             if (Enemies2[i].direction_change == 25) {
-                Enemies2[i].MovePoint = Point(rand() % 30 - 15, rand() % 10 - 5);
+                Enemies2[i].MovePoint = Point(rand() % 30 - 15, rand() % 10 - 7);
                 Enemies2[i].direction_change = 0;
             }
             if (Enemies2[i].MainDot.x < -900 || Enemies2[i].MainDot.x > 900 || Enemies2[i].MainDot.y > 950) {
-                Enemies2[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies2[i].MovePoint = Point(rand() % 20 - 10, rand() % 10 - 7);
                 Enemies2[i].direction_change = 0;
             }
         }
@@ -490,6 +665,31 @@ void TimerFunction(int value) {
             Enemies2.push_back(JetLvl2(Point(((rand() % 1800) - 900), 800),7));
             if (count_to_create == 150) {
                 count_to_create = 0;
+            }
+        }
+    }
+    if (currentMenuState == GAME_MODE_BOSS) {
+        myjet.move_Jet(MovePoint);
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            if (Enemies1[i].MainDot.x >= 0) { Enemies1[i].MovePoint = Point(10, -1); }
+            else { Enemies1[i].MovePoint = Point(10, -1); }
+            Enemies1[i].move_Jet(Enemies1[i].MovePoint);
+        }
+        for (int i = 0; i < Enemies2.size(); ++i) {
+            if (Enemies2[i].MainDot.x >= 0) { Enemies2[i].MovePoint = Point(10, -1); }
+            else { Enemies2[i].MovePoint = Point(10, -1); }
+            Enemies2[i].move_Jet(Enemies2[i].MovePoint);
+        }
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            if (Enemies1[i].MainDot.x < -1300 || Enemies1[i].MainDot.x > 1300 ) {
+                Enemies1.erase(Enemies1.begin() + i);
+                break;
+            }
+        }
+        for (int i = 0; i < Enemies2.size(); ++i) {
+            if (Enemies2[i].MainDot.x < -1300 || Enemies2[i].MainDot.x > 1300) {
+                Enemies2.erase(Enemies2.begin() + i);
+                break;
             }
         }
     }
