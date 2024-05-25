@@ -31,7 +31,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Координаты для MyJet.txt">
+    <Text Include="Координаты для самолетов.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
   </ItemGroup>

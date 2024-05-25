@@ -26,6 +26,8 @@ struct FigterJet {
 struct JetLvl1 : public FigterJet
 {
 	int count_to_shot;
+	Point MovePoint = Point(0, -3);
+	int direction_change = 0;
 	JetLvl1() : FigterJet(), count_to_shot(25) { };
 	JetLvl1(const Point& MainDot) : FigterJet(MainDot), count_to_shot(25) {};
 	JetLvl1(const Point& MainPoint, int HP) : FigterJet(MainPoint, HP), count_to_shot(25) {};
@@ -86,19 +88,19 @@ struct JetLvl1 : public FigterJet
 	}
 
 	bool is_hit(const Point& bullet) {
-		Point A = Point(MainDot.x, MainDot.y - 30);
+		Point A = Point(MainDot.x, MainDot.y - 25);
 		Point B = Point(MainDot.x - 147, MainDot.y + 255);
 		Point C = Point(MainDot.x + 147, MainDot.y + 255);
 		Point LeftSide = A - B;
 		Point RightSide = A - C;
-		if (bullet.y > MainDot.y - 35 && bullet.x > MainDot.x - 147 && bullet.y < MainDot.y + 255
+		if (bullet.y > MainDot.y - 25 && bullet.x > MainDot.x - 147 && bullet.y < MainDot.y + 255
 			&& bullet.x < MainDot.x + 147 && bullet.y < MainDot.y + 255) { // проверяем находится ли точка в "квадрате" около треуголька самолета
-			if (bullet.x > A.x - 5 && bullet.x < A.x + 5 && bullet.y > A.y) {
+			if (bullet.x > A.x - 3 && bullet.x < A.x + 3 && bullet.y > A.y) {
 				return true;
 			}
-			for (int i = 1; i < 20; ++i) { // проверяем близость точки к самому теугольнику
-				Point B1 = B + Point(LeftSide.x / 11 * i, LeftSide.y / 11 * i);
-				Point C1 = C + Point(RightSide.x / 11 * i, RightSide.y / 11 * i);
+			for (int i = 1; i < 30; ++i) { // проверяем близость точки к самому теугольнику
+				Point B1 = B + Point(LeftSide.x / 30 * i, LeftSide.y / 30 * i);
+				Point C1 = C + Point(RightSide.x / 30 * i, RightSide.y / 30 * i);
 				if (bullet.x > B1.x && bullet.x < C1.x && bullet.y > B1.y) {
 					return true;
 				}
@@ -108,6 +110,118 @@ struct JetLvl1 : public FigterJet
 		}
 		return false;
 	}
+};
+
+struct JetLvl2 : public FigterJet
+{
+	int count_to_shot;
+	Point MovePoint = Point(0, -5);
+	int direction_change = 0;
+	JetLvl2() : FigterJet(), count_to_shot(20) { };
+	JetLvl2(const Point& MainDot) : FigterJet(MainDot), count_to_shot(20) {};
+	JetLvl2(const Point& MainPoint, int HP) : FigterJet(MainPoint, HP), count_to_shot(20) {};
+
+	void draw() override {
+		glColor3f(0.9, 0.5, 0); //отрисовка крыльев самолета
+		glBegin(GL_POLYGON);//Передние крылья
+		glVertex2f(MainDot.x - 20, MainDot.y + 75);
+		glVertex2f(MainDot.x - 120, MainDot.y + 120);
+		glVertex2f(MainDot.x - 120, MainDot.y + 135);
+		glVertex2f(MainDot.x - 45, MainDot.y + 125);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 20, MainDot.y + 75);
+		glVertex2f(MainDot.x + 120, MainDot.y + 120);
+		glVertex2f(MainDot.x + 120, MainDot.y + 135);
+		glVertex2f(MainDot.x + 45, MainDot.y + 125);
+		glEnd();
+
+		glBegin(GL_POLYGON);//Несущие крылья
+		glVertex2f(MainDot.x - 45, MainDot.y + 130);
+		glVertex2f(MainDot.x - 180, MainDot.y + 210);
+		glVertex2f(MainDot.x - 180, MainDot.y + 255);
+		glVertex2f(MainDot.x - 45, MainDot.y + 255);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 45, MainDot.y + 130);
+		glVertex2f(MainDot.x + 180, MainDot.y + 210);
+		glVertex2f(MainDot.x + 180, MainDot.y + 255);
+		glVertex2f(MainDot.x + 45, MainDot.y + 255);
+		glEnd();
+
+		glBegin(GL_POLYGON);//Задние крылья
+		glVertex2f(MainDot.x - 45, MainDot.y + 260);
+		glVertex2f(MainDot.x - 150, MainDot.y + 345);
+		glVertex2f(MainDot.x - 120, MainDot.y + 375);
+		glVertex2f(MainDot.x - 75, MainDot.y + 375);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 45, MainDot.y + 260);
+		glVertex2f(MainDot.x + 150, MainDot.y + 345);
+		glVertex2f(MainDot.x + 120, MainDot.y + 375);
+		glVertex2f(MainDot.x + 75, MainDot.y + 375);
+		glEnd();
+
+		
+		glColor3f(0.56, 0.2, 0); // отрисовка фюзеляжа самолета
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x, MainDot.y - 45);
+		glVertex2f(MainDot.x - 20, MainDot.y + 75);
+		glVertex2f(MainDot.x - 45, MainDot.y + 90);
+		glVertex2f(MainDot.x - 60, MainDot.y + 330);
+		glVertex2f(MainDot.x + 60, MainDot.y + 330);
+		glVertex2f(MainDot.x + 45, MainDot.y + 90);
+		glVertex2f(MainDot.x + 20, MainDot.y + 75);
+		glEnd();
+
+		glColor3f(0.2, 0.2, 0.2); //отрисовка турбин самолета
+		glBegin(GL_POLYGON);//Передние крылья
+		glVertex2f(MainDot.x - 45, MainDot.y + 260);
+		glVertex2f(MainDot.x - 10, MainDot.y + 260);
+		glVertex2f(MainDot.x - 15, MainDot.y + 400);
+		glVertex2f(MainDot.x - 40, MainDot.y + 400);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 45, MainDot.y + 260);
+		glVertex2f(MainDot.x + 10, MainDot.y + 260);
+		glVertex2f(MainDot.x + 15, MainDot.y + 400);
+		glVertex2f(MainDot.x + 40, MainDot.y + 400);
+		glEnd();
+
+		glColor3f(0.9, 0.9, 0.9);
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x, MainDot.y);
+		glVertex2f(MainDot.x - 20, MainDot.y + 75);
+		glVertex2f(MainDot.x + 20, MainDot.y + 75);
+		glEnd();
+		
+	}
+
+	bool is_hit(const Point& bullet) override {
+		Point A = Point(MainDot.x, MainDot.y - 30);
+		Point B = Point(MainDot.x - 180, MainDot.y + 255);
+		Point C = Point(MainDot.x + 180, MainDot.y + 255);
+		Point LeftSide = A - B;
+		Point RightSide = A - C;
+		if (bullet.y > MainDot.y - 25 && bullet.x > MainDot.x - 180 && bullet.y < MainDot.y + 255
+			&& bullet.x < MainDot.x + 180 && bullet.y < MainDot.y + 255) { // проверяем находится ли точка в "квадрате" около треуголька самолета
+			if (bullet.x > A.x - 3 && bullet.x < A.x + 3 && bullet.y > A.y) {
+				return true;
+			}
+			for (int i = 1; i < 30; ++i) { // проверяем близость точки к самому теугольнику
+				Point B1 = B + Point(LeftSide.x / 30 * i, LeftSide.y / 30 * i);
+				Point C1 = C + Point(RightSide.x / 30 * i, RightSide.y / 30 * i);
+				if (bullet.x > B1.x && bullet.x < C1.x && bullet.y > B1.y) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+		return false;
+	}
+
+	
 };
 
 struct Bullet {
@@ -210,8 +324,8 @@ struct MyJet : public FigterJet{
 				return true;
 			}
 			for (int i = 1; i < 20; ++i) { // проверяем близость точки к самому теугольнику
-				Point B1 = B + Point(LeftSide.x / 11 * i, LeftSide.y / 11 * i);
-				Point C1 = C + Point(RightSide.x / 11 * i, RightSide.y / 11 * i);
+				Point B1 = B + Point(LeftSide.x / 20 * i, LeftSide.y / 20 * i);
+				Point C1 = C + Point(RightSide.x / 20 * i, RightSide.y / 20 * i);
 				if (bullet.x > B1.x && bullet.x < C1.x && bullet.y < B1.y) {
 					return true;
 				}
@@ -222,41 +336,6 @@ struct MyJet : public FigterJet{
 		return false;
 	}
 
-	//bool is_intersecting(JetLvl1& Enemy) {
-	//	Point A = Point(MainDot.x, MainDot.y + 30);
-	//	Point B = Point(MainDot.x - 147, MainDot.y - 255);
-	//	Point C = Point(MainDot.x + 147, MainDot.y - 255);
-	//	vector<Point> MyJetVerts = { A, B, C };
-	//	Point A1 = Point(Enemy.MainDot.x, Enemy.MainDot.y - 30);
-	//	Point B1 = Point(Enemy.MainDot.x - 147, Enemy.MainDot.y + 255);
-	//	Point C1 = Point(Enemy.MainDot.x + 147, Enemy.MainDot.y + 255);
-	//	vector<Point> EnemyJetVerts = { A1, B1, C1 };
-
-	//	for (int i = 0; i < 3; i++) {
-	//		for (int j = 0; j < 3; j++) {
-	//			if (is_line_intersects(MyJetVerts[i], MyJetVerts[(i + 1) % 3],
-	//				EnemyJetVerts[j], EnemyJetVerts[(j + 1) % 3])) {
-	//				return true;
-	//			}
-	//		}
-	//	}
-
-	//	// Проверка, находится ли какая-либо точка одного треугольника внутри другого
-	//	for (int i = 0; i < 3; i++) {
-	//		if (this -> is_hit(EnemyJetVerts[i])) {
-	//			return true;
-	//		}
-	//	}
-	//	for (int i = 0; i < 3; i++) {
-	//		if (Enemy.is_hit(MyJetVerts[i])) {
-	//			return true;
-	//		}
-	//	}
-
-	//	// Нет пересечений
-	//	return false;
-	//}
-
 	bool is_intersect(JetLvl1 Enemy) {
 		Point A = Point(MainDot.x, MainDot.y + 30);
 		Point B = Point(MainDot.x - 147, MainDot.y - 255);
@@ -265,6 +344,24 @@ struct MyJet : public FigterJet{
 		Point A1 = Point(Enemy.MainDot.x, Enemy.MainDot.y - 30);
 		Point B1 = Point(Enemy.MainDot.x - 147, Enemy.MainDot.y + 255);
 		Point C1 = Point(Enemy.MainDot.x + 147, Enemy.MainDot.y + 255);
+		vector<Point> EnemyJetVerts = { A1, B1, C1 };
+		for (int i = 0; i < 3; ++i) {
+			if (this->is_hit(EnemyJetVerts[i])) { return true; }
+		}
+		for (int i = 0; i < 3; ++i) {
+			if (Enemy.is_hit(MyJetVerts[i])) { return true; }
+		}
+		return false;
+	}
+
+	bool is_intersect(JetLvl2 Enemy) {
+		Point A = Point(MainDot.x, MainDot.y + 30);
+		Point B = Point(MainDot.x - 147, MainDot.y - 255);
+		Point C = Point(MainDot.x + 147, MainDot.y - 255);
+		vector<Point> MyJetVerts = { A, B, C };
+		Point A1 = Point(Enemy.MainDot.x, Enemy.MainDot.y - 30);
+		Point B1 = Point(Enemy.MainDot.x - 180, Enemy.MainDot.y + 255);
+		Point C1 = Point(Enemy.MainDot.x + 180, Enemy.MainDot.y + 255);
 		vector<Point> EnemyJetVerts = { A1, B1, C1 };
 		for (int i = 0; i < 3; ++i) {
 			if (this->is_hit(EnemyJetVerts[i])) { return true; }

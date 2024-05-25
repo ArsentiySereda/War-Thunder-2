@@ -147,7 +147,7 @@
     <ClInclude Include="Point.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Координаты для MyJet.txt" />
+    <Text Include="Координаты для самолетов.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -20,6 +20,8 @@ void keyboardFunc(unsigned char , int , int );		//обработка клавиатуры
 GLfloat windowWidth = 10;
 GLfloat windowHeight = 10;
 int count_to_create = 0;
+int EnemyLvl1count = 0;
+int EnemyLvl2count = 0;
 
 void DrawLine(float x1, float y1, float x2, float y2) {
     glBegin(GL_LINES);
@@ -47,7 +49,8 @@ void DrawOs() {
 }
 
 MyJet myjet = MyJet(Point(0,-800), 20);
-vector <JetLvl1> Enemies1 = {JetLvl1(Point(((rand() % 2000) - 1000), 700))};
+vector <JetLvl1> Enemies1 = {JetLvl1(Point(((rand() % 1800) - 900), 700), 5)};
+vector <JetLvl2> Enemies2 = {JetLvl2(Point(((rand() % 1800) - 900), 700), 7)};
 
 class Button {
 private:
@@ -56,10 +59,11 @@ private:
     double width;
     double height;
     string text;
+    int text_type;
 public:
-    Button() : x(0), y(0), width(0), height(0), text("") {};
-    Button(double x, double y, double width, double height, string text)
-        : x(x), y(y), width(width), height(height), text(text) {};
+    Button() : x(0), y(0), width(0), height(0), text(""), text_type(1) {};
+    Button(double x, double y, double width, double height, string text, int text_type)
+        : x(x), y(y), width(width), height(height), text(text),  text_type(text_type) {};
 
     vector <double> colors = {0.5, 0.5, 0.5};
     void setColor(double first, double second, double third) {
@@ -80,14 +84,24 @@ public:
         glVertex2f(x + width, y + height);
         glVertex2f(x, y + height);
         glEnd();
-
         glColor3f(text_colors[0], text_colors[1], text_colors[2]); // Серый цветw
-        int textLength = text.length();
-        float textX = x + 20;
-        float textY = y + 25;
-        glRasterPos2f(textX, textY);
-        for (int i = 0; i < textLength; i++) {
-            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+        if (text_type == 1) {
+            int textLength = text.length();
+            float textX = x + 20;
+            float textY = y + 25;
+            glRasterPos2f(textX, textY);
+            for (int i = 0; i < textLength; i++) {
+                glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+            }
+        }
+        else if (text_type == 2) {
+            int textLength = text.length();
+            float textX = x + 10;
+            float textY = y + 15;
+            glRasterPos2f(textX, textY);
+            for (int i = 0; i < textLength; i++) {
+                glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text[i]);
+            }
         }
     }
 
@@ -104,14 +118,15 @@ enum MenuState
 {
     MAIN,
     GAME_MODE_1,
+    GAME_MODE_2,
+    GAME_MODE_BOSS,
     LOSE_STATE,
     WIN_STATE
 };
 MenuState currentMenuState = MAIN;
 
-Button Start(-100, 10, 200, 80, "START");
-Button Exit_Game(690, -980, 300, 80, "EXIT GAME");
-Button Health(-900, -980, 100, 80, "HP " + to_string(myjet.HP));
+Button Start(-100, 10, 200, 80, "START", 1);
+Button Exit_Game(690, -980, 300, 80, "EXIT GAME", 1);
 Point MovePoint(0.0,0.0);
 
 void mouseClickHandler(int button, int state, int x, int y) {
@@ -146,6 +161,19 @@ void mouseClickHandler(int button, int state, int x, int y) {
                 glutPostRedisplay();
             }
             break;
+        case GAME_MODE_2:
+            if (Exit_Game.isButtonHovered(najatie)) {
+                MovePoint = Point(0, 0);
+                myjet = MyJet(Point(0, -700));
+                currentMenuState = MAIN;
+                glutPostRedisplay();
+            }
+            else {
+                Bullet a(15, { 1.0,0.0,0.0 }, myjet.MainDot);
+                MyBullets.push_back(a);
+                glutPostRedisplay();
+            }
+            break;
         }
     }
 }
@@ -163,10 +191,12 @@ void RenderScene(void) {
     Start.set_text_colors(0.0, 0.0, 0.0);
     Exit_Game.setColor(1.0, 0.0, 0.0);
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
-    Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP));
+    Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP), 1);
+    Button Kills(-700, -980, 250, 80, "Kills: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
     Health.setColor(0.0, 1.0, 0.0);
-    
-    
+    Kills.setColor(0.0, 0.0, 1.0);
+    bool flag = false;
+
     switch (currentMenuState)
     {
     case MAIN:
@@ -179,32 +209,43 @@ void RenderScene(void) {
             MyBullets[i].move_bullet(15);
             for (int j = 0; j < Enemies1.size(); ++j) {
                 if (MyBullets.size() != 0) {
-                    if (Enemies1[j].is_hit(MyBullets[i].center)) {
+                    if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
+                        MyBullets.erase(MyBullets.begin() + i);
+                        glutPostRedisplay();
+                    }
+                    else if (Enemies1[j].is_hit(MyBullets[i].center)) {
                         cout << "Popadaniye vo vraga" << endl;
                         Enemies1[j].HP--;
                         cout << "Enemy has " << Enemies1[j].HP << " health" << endl;
                         if (Enemies1[j].HP == 0) {
                             Enemies1.erase(Enemies1.begin() + j);
-
+                            MyBullets.erase(MyBullets.begin() + i);
+                            EnemyLvl1count++;
+                            if (EnemyLvl1count == 5) {
+                                currentMenuState = GAME_MODE_2;
+                                glutPostRedisplay();
+                            }
                             break;
                         }
-                        MyBullets.erase(MyBullets.begin() + i);
+                        if (MyBullets.size() != 0) {
+                            MyBullets.erase(MyBullets.begin() + i);
+                        }
                         glutPostRedisplay();
-                    }
-                    else if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
-                        MyBullets.erase(MyBullets.begin() + i);
-                        glutPostRedisplay();
+
+
                     }
                 }
-                else { break; }
+                else {
+                    flag = true;
+                    break; 
+                }
             }
+            if (flag) { break; }
         }
         for (int i = 0; i < EnemyBullets.size(); ++i) {
-            EnemyBullets[i].move_bullet(-10);
+            EnemyBullets[i].move_bullet(-15);
             if (myjet.is_hit(EnemyBullets[i].center)) {
-                cout << "Popadaniye" << endl;
                 myjet.HP--;
-                cout << "Ostalos " << myjet.HP << " of health" << endl;
                 EnemyBullets.erase(EnemyBullets.begin() + i);
                 glutPostRedisplay();
             }
@@ -214,7 +255,7 @@ void RenderScene(void) {
 
         }
         for (int i = 0; i < Enemies1.size(); ++i) {
-            if (Enemies1[i].count_to_shot == 75) {
+            if (Enemies1[i].count_to_shot == 60) {
                 EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
                 Enemies1[i].count_to_shot = 0;
             }
@@ -231,6 +272,10 @@ void RenderScene(void) {
         }
         for (int i = 0; i < Enemies1.size(); i++) {
             Enemies1[i].draw();
+            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+            EnemyHP.setColor(0.15, 0.27, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
         }
         if (myjet.HP == 0) {
             currentMenuState = LOSE_STATE;
@@ -238,6 +283,139 @@ void RenderScene(void) {
         }
         Exit_Game.drawButton();
         Health.drawButton();
+        Kills.drawButton();
+        myjet.draw();
+        glutPostRedisplay();
+        break;
+    case GAME_MODE_2:
+        for (int i = 0; i < MyBullets.size(); ++i) {
+            MyBullets[i].move_bullet(15);
+            for (int j = 0; j < Enemies1.size(); ++j) {
+                if (MyBullets.size() != 0) {
+                    /*if ((MyBullets[i].center.y > 1010 || MyBullets[i].center.y < -1010)) {
+                        MyBullets.erase(MyBullets.begin() + i);
+                        glutPostRedisplay();
+                    }*/
+                    if (Enemies1[j].is_hit(MyBullets[i].center)) {
+                        cout << "Popadaniye vo vraga" << endl;
+                        Enemies1[j].HP--;
+                        cout << "Enemy has " << Enemies1[j].HP << " health" << endl;
+                        if (Enemies1[j].HP == 0) {
+                            Enemies1.erase(Enemies1.begin() + j);
+                            MyBullets.erase(MyBullets.begin() + i);
+                            EnemyLvl1count++;
+                            if (EnemyLvl1count == 5) {
+                                currentMenuState = GAME_MODE_1;
+                                EnemyLvl1count = 0;
+                                glutPostRedisplay();
+                            }
+                            break;
+                        }
+                        if (MyBullets.size() != 0) {
+                            MyBullets.erase(MyBullets.begin() + i);
+                        }
+                        glutPostRedisplay();
+                    }
+                }
+                else {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) { break; }
+            for (int j = 0; j < Enemies2.size(); ++j) {
+                if (MyBullets.size() != 0) {
+                    /*if ((MyBullets[i].center.y > 2000 || MyBullets[i].center.y < -2000)) {
+                        MyBullets.erase(MyBullets.begin() + i);
+                        glutPostRedisplay();
+                    }*/
+                    if (Enemies2[j].is_hit(MyBullets[i].center)) {
+                        cout << "Popadaniye vo vraga" << endl;
+                        Enemies2[j].HP--;
+                        cout << "Enemy has " << Enemies2[j].HP << " health" << endl;
+                        if (Enemies2[j].HP == 0) {
+                            Enemies2.erase(Enemies2.begin() + j);
+                            MyBullets.erase(MyBullets.begin() + i);
+                            EnemyLvl2count++;
+                            if (EnemyLvl2count == 5) {
+                                currentMenuState = GAME_MODE_BOSS;
+                                glutPostRedisplay();
+                            }
+                            break;
+                        }
+                        if (MyBullets.size() != 0) {
+                            MyBullets.erase(MyBullets.begin() + i);
+                        }
+                        glutPostRedisplay();
+                    }
+                }
+                else {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) { break; }
+        }
+        for (int i = 0; i < EnemyBullets.size(); ++i) {
+            EnemyBullets[i].move_bullet(-15);
+            if (myjet.is_hit(EnemyBullets[i].center)) {
+                myjet.HP--;
+                EnemyBullets.erase(EnemyBullets.begin() + i);
+                glutPostRedisplay();
+            }
+            else if ((EnemyBullets[i].center.y > 1000 || EnemyBullets[i].center.y < -1000)) {
+                EnemyBullets.erase(EnemyBullets.begin() + i);
+            }
+
+        }
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            if (Enemies1[i].count_to_shot == 60) {
+                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+                Enemies1[i].count_to_shot = 0;
+            }
+            if (myjet.is_intersect(Enemies1[i])) {
+                cout << "Proizoshlo stolknoveniye, vi proigraly" << endl;
+                currentMenuState = LOSE_STATE;
+            }
+        }
+        
+        for (int i = 0; i < Enemies2.size(); ++i) {
+            if (Enemies2[i].count_to_shot == 40) {
+                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies2[i].MainDot));
+                Enemies2[i].count_to_shot = 0;
+            }
+            if (myjet.is_intersect(Enemies2[i])) {
+                cout << "Proizoshlo stolknoveniye, vi proigraly 2" << endl;
+                
+            }
+        }
+        for (int i = 0; i < MyBullets.size(); i++) {
+            MyBullets[i].draw();
+        }
+        for (int i = 0; i < EnemyBullets.size(); i++) {
+            EnemyBullets[i].draw();
+        }
+        for (int i = 0; i < Enemies1.size(); i++) {
+            Enemies1[i].draw();
+            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+            EnemyHP.setColor(0.15, 0.27, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
+        }
+        for (int i = 0; i < Enemies2.size(); i++) {
+            Enemies2[i].draw();
+            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+            EnemyHP.setColor(0.56, 0.2, 0);
+            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+            EnemyHP.drawButton();
+        }
+        if (myjet.HP == 0) {
+            currentMenuState = LOSE_STATE;
+            glutPostRedisplay();
+        }
+        Exit_Game.drawButton();
+        Health.drawButton();
+        Kills.drawButton();
         myjet.draw();
         glutPostRedisplay();
         break;
@@ -259,13 +437,58 @@ void TimerFunction(int value) {
     if (currentMenuState == GAME_MODE_1) {
         myjet.move_Jet(MovePoint);
         for (int i = 0; i < Enemies1.size(); ++i) {
-            Enemies1[i].move_Jet(Point(0, -3));
+            Enemies1[i].move_Jet(Enemies1[i].MovePoint);
             Enemies1[i].count_to_shot++;
+            Enemies1[i].direction_change++;
+            if (Enemies1[i].direction_change == 25) {
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].direction_change = 0;
+            }
+            if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].direction_change = 0;
+            }
         }
         count_to_create++;
         if (count_to_create == 200 || Enemies1.size() == 0) {
-            Enemies1.push_back(JetLvl1(Point(((rand() % 2000)-1000), 800)));
+            Enemies1.push_back(JetLvl1(Point(((rand() % 1700)-850), 800)));
             if (count_to_create == 200) {
+                count_to_create = 0;
+            }
+        }
+    }
+    if (currentMenuState == GAME_MODE_2) {
+        myjet.move_Jet(MovePoint);
+        for (int i = 0; i < Enemies1.size(); ++i) {
+            Enemies1[i].move_Jet(Enemies1[i].MovePoint);
+            Enemies1[i].count_to_shot++;
+            Enemies1[i].direction_change++;
+            if (Enemies1[i].direction_change == 25) {
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].direction_change = 0;
+            }
+            if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
+                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies1[i].direction_change = 0;
+            }
+        }
+        for (int i = 0; i < Enemies2.size(); ++i) {
+            Enemies2[i].move_Jet(Enemies2[i].MovePoint);
+            Enemies2[i].count_to_shot++;
+            Enemies2[i].direction_change++;
+            if (Enemies2[i].direction_change == 25) {
+                Enemies2[i].MovePoint = Point(rand() % 30 - 15, rand() % 10 - 5);
+                Enemies2[i].direction_change = 0;
+            }
+            if (Enemies2[i].MainDot.x < -900 || Enemies2[i].MainDot.x > 900 || Enemies2[i].MainDot.y > 950) {
+                Enemies2[i].MovePoint = Point(rand() % 20 - 10, rand() % 8 - 4);
+                Enemies2[i].direction_change = 0;
+            }
+        }
+        count_to_create++;
+        if (count_to_create == 150 || Enemies2.size() == 0) {
+            Enemies2.push_back(JetLvl2(Point(((rand() % 1800) - 900), 800),7));
+            if (count_to_create == 150) {
                 count_to_create = 0;
             }
         }
