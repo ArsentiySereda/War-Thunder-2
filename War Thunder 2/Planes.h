@@ -224,6 +224,128 @@ struct JetLvl2 : public FigterJet
 	
 };
 
+struct BOSS : public FigterJet {
+	Point MovePoint = Point(0, 0);
+	BOSS() : FigterJet() { };
+	BOSS(const Point& MainDot) : FigterJet(MainDot) {};
+	BOSS(const Point& MainPoint, int HP) : FigterJet(MainPoint, HP) {};
+
+	virtual void draw() {
+		glColor3f(0.4, 0.0, 0.0);
+		glBegin(GL_POLYGON);//построение фюзел€жа
+		glVertex2f(MainDot.x + 0, MainDot.y - 100);
+		glVertex2f(MainDot.x - 700, MainDot.y + 350);
+		glVertex2f(MainDot.x - 600, MainDot.y + 450);
+		glVertex2f(MainDot.x - 325, MainDot.y + 275);
+		glVertex2f(MainDot.x - 200, MainDot.y + 400);
+		glVertex2f(MainDot.x - 125, MainDot.y + 350);
+		glVertex2f(MainDot.x + 0, MainDot.y + 450);
+		glVertex2f(MainDot.x + 125, MainDot.y + 350);
+		glVertex2f(MainDot.x + 200, MainDot.y + 400);
+		glVertex2f(MainDot.x + 325, MainDot.y + 275);
+		glVertex2f(MainDot.x + 600, MainDot.y + 450);
+		glVertex2f(MainDot.x + 700, MainDot.y + 350);
+		glEnd();
+
+		glColor3f(0.6, 0.1, 0.1);//построение закрылок
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x - 625, MainDot.y + 425);
+		glVertex2f(MainDot.x - 600, MainDot.y + 450);
+		glVertex2f(MainDot.x - 325, MainDot.y + 275);
+		glVertex2f(MainDot.x - 350, MainDot.y + 250);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x - 297, MainDot.y + 252);
+		glVertex2f(MainDot.x - 325, MainDot.y + 275);
+		glVertex2f(MainDot.x - 200, MainDot.y + 400);
+		glVertex2f(MainDot.x - 170, MainDot.y + 380);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x - 56, MainDot.y + 405);
+		glVertex2f(MainDot.x + 0, MainDot.y + 350);
+		glVertex2f(MainDot.x + 56, MainDot.y + 405);
+		glVertex2f(MainDot.x + 0, MainDot.y + 450);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 297, MainDot.y + 252);
+		glVertex2f(MainDot.x + 325, MainDot.y + 275);
+		glVertex2f(MainDot.x + 200, MainDot.y + 400);
+		glVertex2f(MainDot.x + 170, MainDot.y + 380);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 625, MainDot.y + 425);
+		glVertex2f(MainDot.x + 600, MainDot.y + 450);
+		glVertex2f(MainDot.x + 325, MainDot.y + 275);
+		glVertex2f(MainDot.x + 350, MainDot.y + 250);
+		glEnd();
+
+		glColor3f(1.0, 1.0, 1.0);//построение стекла кабины
+		glBegin(GL_TRIANGLE_STRIP);
+		glVertex2f(MainDot.x - 150, MainDot.y + 50);
+		glVertex2f(MainDot.x - 50, MainDot.y - 15);
+		glVertex2f(MainDot.x + 50, MainDot.y - 15);
+		glVertex2f(MainDot.x + 150, MainDot.y + 50);
+		glVertex2f(MainDot.x + 120, MainDot.y + 50);
+		glVertex2f(MainDot.x + 50, MainDot.y + 5);
+		glVertex2f(MainDot.x - 50, MainDot.y + 5);
+		glVertex2f(MainDot.x - 120, MainDot.y + 50);
+		glVertex2f(MainDot.x - 150, MainDot.y + 50);
+		glEnd();
+
+		glColor3f(0.7, 0.7, 0.7);//построение стекла кабины
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x - 150, MainDot.y - 5 + 50);
+		glVertex2f(MainDot.x - 50, MainDot.y - 5 - 15);
+		glVertex2f(MainDot.x + 50, MainDot.y - 5 - 15);
+		glVertex2f(MainDot.x + 150, MainDot.y - 5 + 50);
+		glVertex2f(MainDot.x + 120, MainDot.y - 5 + 50);
+		glVertex2f(MainDot.x + 50, MainDot.y - 5 + 5);
+		glVertex2f(MainDot.x - 50, MainDot.y - 5 + 5);
+		glVertex2f(MainDot.x - 120, MainDot.y - 5 + 50);
+		glEnd();
+
+		glColor3f(0.0, 0.0, 0.0);
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x - 200, MainDot.y + 75);
+		glVertex2f(MainDot.x - 200, MainDot.y + 250);
+		glVertex2f(MainDot.x - 162, MainDot.y + 275);
+		glVertex2f(MainDot.x - 125, MainDot.y + 250);
+		glVertex2f(MainDot.x - 125, MainDot.y + 75);
+		glEnd();
+		glBegin(GL_POLYGON);
+		glVertex2f(MainDot.x + 200, MainDot.y + 75);
+		glVertex2f(MainDot.x + 200, MainDot.y + 250);
+		glVertex2f(MainDot.x + 162, MainDot.y + 275);
+		glVertex2f(MainDot.x + 125, MainDot.y + 250);
+		glVertex2f(MainDot.x + 125, MainDot.y + 75);
+		glEnd();
+	}
+
+	bool is_hit(const Point& bullet) override {
+		Point A = Point(MainDot.x, MainDot.y - 100);
+		Point B = Point(MainDot.x - 700, MainDot.y + 350);
+		Point C = Point(MainDot.x + 700, MainDot.y + 350);
+		Point LeftSide = A - B;
+		Point RightSide = A - C;
+		if (bullet.y > MainDot.y - 100 && bullet.x > MainDot.x - 700 && bullet.y < MainDot.y + 350
+			&& bullet.x < MainDot.x + 700 && bullet.y < MainDot.y + 350) { // провер€ем находитс€ ли точка в "квадрате" около треуголька самолета
+			if (bullet.x > A.x - 5 && bullet.x < A.x + 5 && bullet.y > A.y) {
+				return true;
+			}
+			for (int i = 1; i < 30; ++i) { // провер€ем близость точки к самому теугольнику
+				Point B1 = B + Point(LeftSide.x / 30 * i, LeftSide.y / 30 * i);
+				Point C1 = C + Point(RightSide.x / 30 * i, RightSide.y / 30 * i);
+				if (bullet.x > B1.x && bullet.x < C1.x && bullet.y > B1.y) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+		return false;
+	}
+};
+
 struct Bullet {
 	int size;
 	vector <double> color;
@@ -369,104 +491,21 @@ struct MyJet : public FigterJet{
 		}
 		return false;
 	}
-};
-
-struct BOSS : public FigterJet{
-	BOSS() : FigterJet() { };
-	BOSS(const Point& MainDot) : FigterJet(MainDot) {};
-	BOSS(const Point& MainPoint, int HP) : FigterJet(MainPoint, HP) {};
-
-	virtual void draw() {
-		glColor3f(0.4,0.0,0.0);
-		glBegin(GL_POLYGON);//построение фюзел€жа
-		glVertex2f(MainDot.x + 0, MainDot.y - 100);
-		glVertex2f(MainDot.x - 700, MainDot.y + 350);
-		glVertex2f(MainDot.x -600, MainDot.y + 450);
-		glVertex2f(MainDot.x - 325, MainDot.y + 275);
-		glVertex2f(MainDot.x -200 , MainDot.y + 400);
-		glVertex2f(MainDot.x -125, MainDot.y + 350);
-		glVertex2f(MainDot.x  + 0, MainDot.y + 450);
-		glVertex2f(MainDot.x + 125, MainDot.y + 350);
-		glVertex2f(MainDot.x + 200, MainDot.y + 400);
-		glVertex2f(MainDot.x + 325, MainDot.y + 275);
-		glVertex2f(MainDot.x + 600, MainDot.y + 450);
-		glVertex2f(MainDot.x + 700, MainDot.y + 350);
-		glEnd();
-
-		glColor3f(0.6,0.1,0.1);//построение закрылок
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x - 625, MainDot.y + 425);
-		glVertex2f(MainDot.x - 600, MainDot.y + 450);
-		glVertex2f(MainDot.x - 325, MainDot.y + 275);
-		glVertex2f(MainDot.x - 350, MainDot.y + 250);
-		glEnd();
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x - 297, MainDot.y + 252);
-		glVertex2f(MainDot.x - 325, MainDot.y + 275);
-		glVertex2f(MainDot.x - 200, MainDot.y + 400);
-		glVertex2f(MainDot.x - 170, MainDot.y + 380);
-		glEnd();
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x - 56, MainDot.y + 405);
-		glVertex2f(MainDot.x + 0, MainDot.y + 350);
-		glVertex2f(MainDot.x + 56, MainDot.y + 405);
-		glVertex2f(MainDot.x + 0, MainDot.y + 450);
-		glEnd();
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x + 297, MainDot.y + 252);
-		glVertex2f(MainDot.x + 325, MainDot.y + 275);
-		glVertex2f(MainDot.x + 200, MainDot.y + 400);
-		glVertex2f(MainDot.x + 170, MainDot.y + 380);
-		glEnd();
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x + 625, MainDot.y + 425);
-		glVertex2f(MainDot.x + 600, MainDot.y + 450);
-		glVertex2f(MainDot.x + 325, MainDot.y + 275);
-		glVertex2f(MainDot.x + 350, MainDot.y + 250);
-		glEnd();
-
-		glColor3f(1.0, 1.0, 1.0);//построение стекла кабины
-		glBegin(GL_TRIANGLE_STRIP);
-		glVertex2f(MainDot.x - 150, MainDot.y + 50);
-		glVertex2f(MainDot.x - 50, MainDot.y - 15);
-		glVertex2f(MainDot.x + 50 , MainDot.y - 15);
-		glVertex2f(MainDot.x + 150, MainDot.y + 50);
-		glVertex2f(MainDot.x + 120, MainDot.y + 50);
-		glVertex2f(MainDot.x + 50, MainDot.y + 5);
-		glVertex2f(MainDot.x - 50, MainDot.y + 5);
-		glVertex2f(MainDot.x - 120, MainDot.y + 50);
-		glVertex2f(MainDot.x - 150, MainDot.y + 50);
-		glEnd();
-
-		glColor3f(1.0, 1.0, 1.0);//построение стекла кабины
-		glBegin(GL_TRIANGLE_STRIP);
-		glVertex2f(MainDot.x - 150, MainDot.y - 5 + 50);
-		glVertex2f(MainDot.x - 50, MainDot.y - 5 - 15);
-		glVertex2f(MainDot.x + 50, MainDot.y - 5 - 15);
-		glVertex2f(MainDot.x + 150, MainDot.y- 5 + 50);
-		glVertex2f(MainDot.x + 120, MainDot. y- 5 + 50);
-		glVertex2f(MainDot.x + 50, MainDot.y - 5 + 5);
-		glVertex2f(MainDot.x - 50, MainDot.y - 5 + 5);
-		glVertex2f(MainDot.x - 120, MainDot.y - 5 + 50);
-		glEnd();
-
-		glColor3f(0.0, 0.0, 0.0);
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x - 200, MainDot.y + 75);
-		glVertex2f(MainDot.x - 200, MainDot.y + 250);
-		glVertex2f(MainDot.x - 162, MainDot.y + 275);
-		glVertex2f(MainDot.x - 125, MainDot.y + 250);
-		glVertex2f(MainDot.x - 125, MainDot.y + 75);
-		glEnd();
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x + 200, MainDot.y + 75);
-		glVertex2f(MainDot.x + 200, MainDot.y + 250);
-		glVertex2f(MainDot.x + 162, MainDot.y + 275);
-		glVertex2f(MainDot.x + 125, MainDot.y + 250);
-		glVertex2f(MainDot.x + 125, MainDot.y + 75);
-		glEnd();
-	}
-	bool is_hit(const Point& bullet) override{
-		return true;
+	bool is_intersect(BOSS Enemy) {
+		Point A = Point(MainDot.x, MainDot.y + 30);
+		Point B = Point(MainDot.x - 147, MainDot.y - 255);
+		Point C = Point(MainDot.x + 147, MainDot.y - 255);
+		vector<Point> MyJetVerts = { A, B, C };
+		Point A1 = Point(Enemy.MainDot.x, Enemy.MainDot.y - 100);
+		Point B1 = Point(Enemy.MainDot.x - 700, Enemy.MainDot.y + 350);
+		Point C1 = Point(Enemy.MainDot.x + 700, Enemy.MainDot.y + 350);
+		vector<Point> EnemyJetVerts = { A1, B1, C1 };
+		for (int i = 0; i < 3; ++i) {
+			if (this->is_hit(EnemyJetVerts[i])) { return true; }
+		}
+		for (int i = 0; i < 3; ++i) {
+			if (Enemy.is_hit(MyJetVerts[i])) { return true; }
+		}
+		return false;
 	}
 };

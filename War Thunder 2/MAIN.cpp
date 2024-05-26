@@ -51,7 +51,7 @@ void DrawOs() {
 MyJet myjet = MyJet(Point(0,-800), 20);
 vector <JetLvl1> Enemies1;
 vector <JetLvl2> Enemies2;
-BOSS boss = BOSS(Point(0, 1100));
+BOSS boss = BOSS(Point(0, 1100),20);
 
 class Button {
 private:
@@ -120,11 +120,12 @@ enum MenuState
     MAIN,
     GAME_MODE_1,
     GAME_MODE_2,
-    GAME_MODE_BOSS,
+    GAME_MODE_BOSS_ENTRANCE,
+    GAME_MODE_BOSS_FIGHT,
     LOSE_STATE,
     WIN_STATE
 };
-MenuState currentMenuState = MAIN;
+MenuState currentMenuState = GAME_MODE_BOSS_ENTRANCE;
 
 Button Start(-100, 10, 200, 80, "START", 1);
 Button Exit_Game(690, -980, 300, 80, "EXIT GAME", 1);
@@ -175,7 +176,10 @@ void mouseClickHandler(int button, int state, int x, int y) {
                 glutPostRedisplay();
             }
             break;
-        case GAME_MODE_BOSS:
+        case GAME_MODE_BOSS_ENTRANCE:
+
+            break;
+        case GAME_MODE_BOSS_FIGHT:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
                 myjet = MyJet(Point(0, -700));
@@ -206,6 +210,7 @@ void RenderScene(void) {
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
     Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP), 1);
     Button Kills(-700, -980, 250, 80, "Kills: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
+    Button bossHP(boss.MainDot.x - 75, boss.MainDot.y + 150, 150, 80, "HP:" + to_string(boss.HP), 1);
     Health.setColor(0.0, 1.0, 0.0);
     Kills.setColor(0.0, 0.0, 1.0);
     bool flag = false;
@@ -241,7 +246,7 @@ void RenderScene(void) {
                     if (Enemies1[i].HP == 0) {
                         delete_enemy1.push_back(i);
                         EnemyLvl1count++;
-                        if (EnemyLvl1count == 2) {
+                        if (EnemyLvl1count == 5) {
                             currentMenuState = GAME_MODE_2;
                             glutPostRedisplay();
                         }
@@ -268,6 +273,7 @@ void RenderScene(void) {
                 }
             }
         }
+
         for (int i = 0; i < delete_enemybullets.size(); ++i) {
             EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
         }
@@ -333,8 +339,8 @@ void RenderScene(void) {
                     if (Enemies2[i].HP == 0) {
                         delete_enemy2.push_back(i);
                         EnemyLvl2count++;
-                        if (EnemyLvl2count == 1) {
-                            currentMenuState = GAME_MODE_BOSS;
+                        if (EnemyLvl2count == 5) {
+                            currentMenuState = GAME_MODE_BOSS_ENTRANCE;
                             glutPostRedisplay();
                         }
                         break;
@@ -353,8 +359,17 @@ void RenderScene(void) {
         }
         for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
             EnemyBullets[i].move_bullet(-15);
-            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
-            else if (myjet.is_hit(EnemyBullets[i].center)) {
+            if (EnemyBullets[i].center.y < -1050) { 
+                EnemyBullets.erase(EnemyBullets.begin() + i); 
+                i--;
+            }
+        }
+        /*for (int i = 0; i < delete_enemybullets.size(); ++i) {
+            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+        }*/
+        delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+            if (myjet.is_hit(EnemyBullets[i].center)) {
                 delete_enemybullets.push_back(i);
                 myjet.HP--;
                 if (myjet.HP == 0) {
@@ -366,6 +381,7 @@ void RenderScene(void) {
         for (int i = 0; i < delete_enemybullets.size(); ++i) {
             EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
         }
+        delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
 
         for (int i = 0; i < MyBullets.size(); i++) {
             MyBullets[i].draw();
@@ -394,27 +410,76 @@ void RenderScene(void) {
         myjet.draw();
         glutPostRedisplay();
         break;
-    case GAME_MODE_BOSS:
+    case GAME_MODE_BOSS_ENTRANCE:
         for (int i = 0; i < Enemies1.size(); i++) {
             Enemies1[i].draw();
-            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
-            EnemyHP.setColor(0.15, 0.27, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
         }
         for (int i = 0; i < Enemies2.size(); i++) {
             Enemies2[i].draw();
-            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
-            EnemyHP.setColor(0.56, 0.2, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
         }
-
+        if(boss.MainDot.y < 460) {
+            currentMenuState = GAME_MODE_BOSS_FIGHT;
+            glutPostRedisplay();
+        }
+        myjet.draw();
+        boss.draw();
+        glutPostRedisplay();
+        break;
+    case GAME_MODE_BOSS_FIGHT:
+        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
+            MyBullets[i].move_bullet(15);
+            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
+        }
+        for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+            if (boss.is_hit(MyBullets[j].center)) {
+                delete_mybullets.push_back(j);
+                boss.HP--;
+                cout << "BOSS HIT" << endl;
+                if (boss.HP == 0) {
+                    currentMenuState = WIN_STATE;
+                    cout << "YOU WIN" << endl;
+                    glutPostRedisplay();
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i < delete_mybullets.size(); ++i) {
+            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
+        }
+        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+            EnemyBullets[i].move_bullet(-15);
+            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
+            else if (myjet.is_hit(EnemyBullets[i].center)) {
+                delete_enemybullets.push_back(i);
+                myjet.HP--;
+                if (myjet.HP == 0) {
+                    currentMenuState = LOSE_STATE;
+                    glutPostRedisplay();
+                }
+            }
+        }
+        for (int i = 0; i < delete_enemybullets.size(); ++i) {
+            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+        }
+        if (myjet.is_intersect(boss)) {//проверка столкновения самолетов
+            cout << "YOU MET THE BOSS" << endl;
+            currentMenuState = LOSE_STATE;
+            glutPostRedisplay();
+        }
+        boss.draw();
+        bossHP.setColor(0.4, 0.0, 0.0);
+        bossHP.set_text_colors(1.0, 1.0, 1.0);
+        bossHP.drawButton();
+        for (int i = 0; i < MyBullets.size(); i++) {
+            MyBullets[i].draw();
+        }
+        for (int i = 0; i < EnemyBullets.size(); i++) {
+            EnemyBullets[i].draw();
+        }
         Exit_Game.drawButton();
         Health.drawButton();
         Kills.drawButton();
         myjet.draw();
-        boss.draw();
         glutPostRedisplay();
         break;
     case LOSE_STATE:
@@ -441,6 +506,7 @@ void RenderScene(void) {
         Health.drawButton();
         Kills.drawButton();
         Exit_Game.drawButton();
+        boss.draw();
         myjet.draw();
         break;
     case WIN_STATE:
@@ -467,7 +533,7 @@ void TimerFunction(int value) {
                 Enemies1[i].direction_change = 0;
             }
             if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 4);
+                Enemies1[i].MovePoint = Point(-Enemies1[i].MovePoint.x, Enemies1[i].MovePoint.y);
                 Enemies1[i].direction_change = 0;
             }
         }
@@ -490,7 +556,7 @@ void TimerFunction(int value) {
                 Enemies1[i].direction_change = 0;
             }
             if (Enemies1[i].MainDot.x < -900 || Enemies1[i].MainDot.x > 900 || Enemies1[i].MainDot.y > 950) {
-                Enemies1[i].MovePoint = Point(rand() % 20 - 10, rand() % 6 - 5);
+                Enemies1[i].MovePoint = Point(-Enemies1[i].MovePoint.x, Enemies1[i].MovePoint.y);
                 Enemies1[i].direction_change = 0;
             }
         }
@@ -499,11 +565,11 @@ void TimerFunction(int value) {
             Enemies2[i].count_to_shot++;
             Enemies2[i].direction_change++;
             if (Enemies2[i].direction_change == 25) {
-                Enemies2[i].MovePoint = Point(rand() % 30 - 15, rand() % 10 - 7);
+                Enemies2[i].MovePoint = Point(rand() % 30 - 15, rand() % 12 - 7);
                 Enemies2[i].direction_change = 0;
             }
             if (Enemies2[i].MainDot.x < -900 || Enemies2[i].MainDot.x > 900 || Enemies2[i].MainDot.y > 950) {
-                Enemies2[i].MovePoint = Point(rand() % 20 - 10, rand() % 10 - 7);
+                Enemies2[i].MovePoint = Point(-Enemies2[i].MovePoint.x, Enemies2[i].MovePoint.y);
                 Enemies2[i].direction_change = 0;
             }
         }
@@ -515,7 +581,7 @@ void TimerFunction(int value) {
             }
         }
     }
-    if (currentMenuState == GAME_MODE_BOSS) {
+    if (currentMenuState == GAME_MODE_BOSS_ENTRANCE) {
         myjet.move_Jet(MovePoint);
         for (int i = 0; i < Enemies1.size(); ++i) {
             if (Enemies1[i].MainDot.x >= 0) { Enemies1[i].MovePoint = Point(15, -1); }
@@ -539,8 +605,37 @@ void TimerFunction(int value) {
                 break;
             }
         }
-        if (Enemies1.size() == 0 && Enemies2.size() == 0 && boss.MainDot.y > 455) {
+        if (boss.MainDot.y > 455) {
             boss.move_Jet(Point(0, -5));
+        }
+        
+    }
+    if (currentMenuState == GAME_MODE_BOSS_FIGHT) {
+        myjet.move_Jet(MovePoint);
+        boss.move_Jet(boss.MovePoint);
+        if (rand() % 45 == 1) {
+            EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Point(boss.MainDot.x - 500, boss.MainDot.y + 250)));
+        }
+        if (rand() % 45 == 1) {
+            EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Point(boss.MainDot.x + 500, boss.MainDot.y + 250)));
+        }
+        if (rand() % 45 == 1) {
+            EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Point(boss.MainDot.x - 162, boss.MainDot.y + 96)));
+        }
+        if (rand() % 45 == 1) {
+            EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Point(boss.MainDot.x + 162, boss.MainDot.y + 96)));
+        }
+        if (rand() % 45 == 1) {
+            EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Point(boss.MainDot.x - 0, boss.MainDot.y - 75)));
+        }
+        if (boss.MainDot.x < -750) {
+            boss.MovePoint = Point(6, 0);
+        }
+        else if (boss.MainDot.x > 750) {
+            boss.MainDot = Point(-6, 0);
+        }
+        else if(rand() % 40 == 1) {
+            boss.MovePoint = Point(rand() % 20 - 10, 0);
         }
     }
     glutPostRedisplay();
