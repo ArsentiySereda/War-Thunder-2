@@ -48,7 +48,7 @@ void DrawOs() {
     }
 }
 
-MyJet myjet = MyJet(Point(0,-800), 20);
+MyJet myjet = MyJet(Point(0,-800), 30);
 vector <JetLvl1> Enemies1;
 vector <JetLvl2> Enemies2;
 BOSS boss = BOSS(Point(0, 1100),20);
@@ -125,9 +125,11 @@ enum MenuState
     LOSE_STATE,
     WIN_STATE
 };
-MenuState currentMenuState = GAME_MODE_BOSS_ENTRANCE;
+MenuState currentMenuState = MAIN;
 
 Button Start(-100, 10, 200, 80, "START", 1);
+Button TryAgain(-155, -190, 310, 80, "TRY AGAIN", 1);
+Button PlayAgain (-165, -190, 330, 80, "PLAY AGAIN", 1);
 Button Exit_Game(690, -980, 300, 80, "EXIT GAME", 1);
 Point MovePoint(0.0,0.0);
 
@@ -153,8 +155,12 @@ void mouseClickHandler(int button, int state, int x, int y) {
         case GAME_MODE_1:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet = MyJet(Point(0, -700));
-                currentMenuState = MAIN;
+                myjet.to_default();
+                Enemies1.erase(Enemies1.begin(), Enemies1.end());
+                Enemies2.erase(Enemies2.begin(), Enemies2.end());
+                MyBullets.erase(MyBullets.begin(), MyBullets.end());
+                EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
+                boss = BOSS(Point(0, 1100), 20);
                 glutPostRedisplay();
             }
             else {
@@ -166,7 +172,12 @@ void mouseClickHandler(int button, int state, int x, int y) {
         case GAME_MODE_2:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet = MyJet(Point(0, -700));
+                myjet.to_default();
+                Enemies1.erase(Enemies1.begin(), Enemies1.end());
+                Enemies2.erase(Enemies2.begin(), Enemies2.end());
+                MyBullets.erase(MyBullets.begin(), MyBullets.end());
+                EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
+                boss = BOSS(Point(0, 1100), 20);
                 currentMenuState = MAIN;
                 glutPostRedisplay();
             }
@@ -182,13 +193,54 @@ void mouseClickHandler(int button, int state, int x, int y) {
         case GAME_MODE_BOSS_FIGHT:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet = MyJet(Point(0, -700));
+                myjet = MyJet(Point(0, -800));
+                Enemies1.erase(Enemies1.begin(), Enemies1.end());
+                Enemies2.erase(Enemies2.begin(), Enemies2.end());
+                MyBullets.erase(MyBullets.begin(), MyBullets.end());
+                EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
+                boss = BOSS(Point(0, 1100), 20);
                 currentMenuState = MAIN;
                 glutPostRedisplay();
             }
             else {
                 Bullet a(15, { 1.0,0.0,0.0 }, myjet.MainDot);
                 MyBullets.push_back(a);
+                glutPostRedisplay();
+            }
+            break;
+        case LOSE_STATE:
+            if (Exit_Game.isButtonHovered(najatie)) {
+                exit(0);
+            }
+            else if(TryAgain.isButtonHovered(najatie)) {
+                MovePoint = Point(0, 0);
+                myjet.to_default();
+                Enemies1.erase(Enemies1.begin(), Enemies1.end());
+                Enemies2.erase(Enemies2.begin(), Enemies2.end());
+                MyBullets.erase(MyBullets.begin(), MyBullets.end());
+                EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
+                EnemyLvl1count = 0;
+                EnemyLvl2count = 0;
+                boss = BOSS(Point(0, 1100), 20);
+                currentMenuState = MAIN;
+                glutPostRedisplay();
+            }
+            break;
+        case WIN_STATE:
+            if (Exit_Game.isButtonHovered(najatie)) {
+                exit(0);
+            }
+            else if (PlayAgain.isButtonHovered(najatie)) {
+                MovePoint = Point(0, 0);
+                myjet.to_default();
+                Enemies1.erase(Enemies1.begin(), Enemies1.end());
+                Enemies2.erase(Enemies2.begin(), Enemies2.end());
+                MyBullets.erase(MyBullets.begin(), MyBullets.end());
+                EnemyLvl1count = 0;
+                EnemyLvl2count = 0;
+                EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
+                boss = BOSS(Point(0, 1100), 20);
+                currentMenuState = MAIN;
                 glutPostRedisplay();
             }
             break;
@@ -211,8 +263,14 @@ void RenderScene(void) {
     Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP), 1);
     Button Kills(-700, -980, 250, 80, "Kills: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
     Button bossHP(boss.MainDot.x - 75, boss.MainDot.y + 150, 150, 80, "HP:" + to_string(boss.HP), 1);
+    Button Lose(-135, 10, 270, 80, "YOU LOSE", 1);
+    Button Win(-130, 10, 260, 80, "YOU WIN", 1);
+    Lose.setColor(1.0,0.0,0.73);
+    Win.setColor(1.0,0.0,0.73);
     Health.setColor(0.0, 1.0, 0.0);
     Kills.setColor(0.0, 0.0, 1.0);
+    TryAgain.setColor(0.1,1.0,0.0);
+    PlayAgain.setColor(0.1,1.0,0.0);
     bool flag = false;
     vector <int> delete_mybullets;
     vector <int> delete_enemybullets;
@@ -226,291 +284,346 @@ void RenderScene(void) {
         myjet.draw();     
         break;
     case GAME_MODE_1:
-        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
-            MyBullets[i].move_bullet(15);
-            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
-        }
-        for (int i = 0; i < Enemies1.size(); ++i) {
-            if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
-                currentMenuState = LOSE_STATE;
-                glutPostRedisplay();
+        if (currentMenuState == GAME_MODE_1) {
+            for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
+                MyBullets[i].move_bullet(15);
+                if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
             }
-            if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
-                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
-                Enemies1[i].count_to_shot = 0;
-            }
-            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
-                if (Enemies1[i].is_hit(MyBullets[j].center)) {
-                    delete_mybullets.push_back(j);
-                    Enemies1[i].HP--;
-                    if (Enemies1[i].HP == 0) {
-                        delete_enemy1.push_back(i);
-                        EnemyLvl1count++;
-                        if (EnemyLvl1count == 5) {
-                            currentMenuState = GAME_MODE_2;
-                            glutPostRedisplay();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
-            Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
-        }
-        for (int i = 0; i < delete_mybullets.size(); ++i) {
-            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
-        }
-        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
-            EnemyBullets[i].move_bullet(-15);
-            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
-            else if (myjet.is_hit(EnemyBullets[i].center)) {
-                delete_enemybullets.push_back(i);
-                myjet.HP--;
-                if (myjet.HP == 0) {
+            for (int i = 0; i < Enemies1.size(); ++i) {
+                if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
                     currentMenuState = LOSE_STATE;
                     glutPostRedisplay();
                 }
+                if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
+                    EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+                    Enemies1[i].count_to_shot = 0;
+                }
+                for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                    if (Enemies1[i].is_hit(MyBullets[j].center)) {
+                        delete_mybullets.push_back(j);
+                        Enemies1[i].HP--;
+                        if (Enemies1[i].HP == 0) {
+                            delete_enemy1.push_back(i);
+                            EnemyLvl1count++;
+                            if (EnemyLvl1count == 5) {
+                                currentMenuState = GAME_MODE_2;
+                                glutPostRedisplay();
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-        }
+            for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
+                Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
+            }
+            for (int i = 0; i < delete_mybullets.size(); ++i) {
+                MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
+            }
+            for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+                EnemyBullets[i].move_bullet(-15);
+                if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
+                else if (myjet.is_hit(EnemyBullets[i].center)) {
+                    delete_enemybullets.push_back(i);
+                    myjet.HP--;
+                    if (myjet.HP == 0) {
+                        cout << "YOU LOSE" << endl;
+                        currentMenuState = LOSE_STATE;
+                        glutPostRedisplay();
+                    }
+                }
+            }
 
-        for (int i = 0; i < delete_enemybullets.size(); ++i) {
-            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
-        }
+            for (int i = 0; i < delete_enemybullets.size(); ++i) {
+                EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+            }
 
-        for (int i = 0; i < MyBullets.size(); i++) {
-            MyBullets[i].draw();
+            for (int i = 0; i < MyBullets.size(); i++) {
+                MyBullets[i].draw();
+            }
+            for (int i = 0; i < EnemyBullets.size(); i++) {
+                EnemyBullets[i].draw();
+            }
+            for (int i = 0; i < Enemies1.size(); i++) {
+                Enemies1[i].draw();
+                Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+                EnemyHP.setColor(0.15, 0.27, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+            Exit_Game.drawButton();
+            Health.drawButton();
+            Kills.drawButton();
+            myjet.draw();
+            glutPostRedisplay();
+            break;
         }
-        for (int i = 0; i < EnemyBullets.size(); i++) {
-            EnemyBullets[i].draw();
-        }
-        for (int i = 0; i < Enemies1.size(); i++) {
-            Enemies1[i].draw();
-            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
-            EnemyHP.setColor(0.15, 0.27, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
-        }
-        Exit_Game.drawButton();
-        Health.drawButton();
-        Kills.drawButton();
-        myjet.draw();
-        glutPostRedisplay();
-        break;
     case GAME_MODE_2:
-        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
-            MyBullets[i].move_bullet(15);
-            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
-        }
-        for (int i = 0; i < Enemies1.size(); ++i) {
-            if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
-                currentMenuState = LOSE_STATE;
-                glutPostRedisplay();
+        if (currentMenuState == GAME_MODE_2) {
+            for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
+                MyBullets[i].move_bullet(15);
+                if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
             }
-            if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
-                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
-                Enemies1[i].count_to_shot = 0;
-            }
-            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
-                if (Enemies1[i].is_hit(MyBullets[j].center)) {
-                    delete_mybullets.push_back(j);
-                    Enemies1[i].HP--;
-                    if (Enemies1[i].HP == 0) {
-                        delete_enemy1.push_back(i);
-                        EnemyLvl1count++;
-                        break;
-                    }
+            for (int i = 0; i < Enemies1.size(); ++i) {
+                if (myjet.is_intersect(Enemies1[i])) {//проверка столкновения самолетов
+                    cout << "YOU LOSE" << endl;
+                    currentMenuState = LOSE_STATE;
+                    glutPostRedisplay();
                 }
-            }
-        }
-        for (int i = 0; i < Enemies2.size(); ++i) {
-            if (myjet.is_intersect(Enemies2[i])) {//проверка столкновения самолетов
-                currentMenuState = LOSE_STATE;
-                glutPostRedisplay();
-            }
-            if (Enemies2[i].count_to_shot == 50) {//стрельба каждого противника
-                EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies2[i].MainDot));
-                Enemies2[i].count_to_shot = 0;
-            }
-            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
-                if (Enemies2[i].is_hit(MyBullets[j].center)) {
-                    delete_mybullets.push_back(j);
-                    Enemies2[i].HP--;
-                    if (Enemies2[i].HP == 0) {
-                        delete_enemy2.push_back(i);
-                        EnemyLvl2count++;
-                        if (EnemyLvl2count == 5) {
-                            currentMenuState = GAME_MODE_BOSS_ENTRANCE;
-                            glutPostRedisplay();
+                if (Enemies1[i].count_to_shot == 60) {//стрельба каждого противника
+                    EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies1[i].MainDot));
+                    Enemies1[i].count_to_shot = 0;
+                }
+                for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                    if (Enemies1[i].is_hit(MyBullets[j].center)) {
+                        delete_mybullets.push_back(j);
+                        Enemies1[i].HP--;
+                        if (Enemies1[i].HP == 0) {
+                            delete_enemy1.push_back(i);
+                            EnemyLvl1count++;
+                            break;
                         }
+                    }
+                }
+            }
+            for (int i = 0; i < Enemies2.size(); ++i) {
+                if (myjet.is_intersect(Enemies2[i])) {//проверка столкновения самолетов
+                    currentMenuState = LOSE_STATE;
+                    glutPostRedisplay();
+                }
+                if (Enemies2[i].count_to_shot == 50) {//стрельба каждого противника
+                    EnemyBullets.push_back(Bullet(15, { 0.0,0.0,1.0 }, Enemies2[i].MainDot));
+                    Enemies2[i].count_to_shot = 0;
+                }
+                for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                    if (Enemies2[i].is_hit(MyBullets[j].center)) {
+                        delete_mybullets.push_back(j);
+                        Enemies2[i].HP--;
+                        if (Enemies2[i].HP == 0) {
+                            delete_enemy2.push_back(i);
+                            EnemyLvl2count++;
+                            if (EnemyLvl2count == 5) {
+                                currentMenuState = GAME_MODE_BOSS_ENTRANCE;
+                                glutPostRedisplay();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
+                Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
+            }
+            for (int i = 0; i < delete_enemy2.size(); ++i) { // удаление пуль и противников
+                Enemies2.erase(Enemies2.begin() + delete_enemy2[i]);
+            }
+            for (int i = 0; i < delete_mybullets.size(); ++i) {
+                MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
+            }
+            for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+                EnemyBullets[i].move_bullet(-15);
+                if (EnemyBullets[i].center.y < -1050) {
+                    EnemyBullets.erase(EnemyBullets.begin() + i);
+                    i--;
+                }
+            }
+            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+            for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+                if (myjet.is_hit(EnemyBullets[i].center)) {
+                    delete_enemybullets.push_back(i);
+                    myjet.HP--;
+                    if (myjet.HP == 0) {
+                        cout << "YOU LOSE" << endl;
+                        currentMenuState = LOSE_STATE;
+                        glutPostRedisplay();
+                    }
+                }
+            }
+            for (int i = 0; i < delete_enemybullets.size(); ++i) {
+                EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+            }
+            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+
+            for (int i = 0; i < MyBullets.size(); i++) {
+                MyBullets[i].draw();
+            }
+            for (int i = 0; i < EnemyBullets.size(); i++) {
+                EnemyBullets[i].draw();
+            }
+            for (int i = 0; i < Enemies1.size(); i++) {
+                Enemies1[i].draw();
+                Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+                EnemyHP.setColor(0.15, 0.27, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+            for (int i = 0; i < Enemies2.size(); i++) {
+                Enemies2[i].draw();
+                Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+                EnemyHP.setColor(0.56, 0.2, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+
+            Exit_Game.drawButton();
+            Health.drawButton();
+            Kills.drawButton();
+            myjet.draw();
+            glutPostRedisplay();
+            break;
+        }
+    case GAME_MODE_BOSS_ENTRANCE:
+        if (currentMenuState == GAME_MODE_BOSS_ENTRANCE) {
+            for (int i = 0; i < Enemies1.size(); i++) {
+                Enemies1[i].draw();
+            }
+            for (int i = 0; i < Enemies2.size(); i++) {
+                Enemies2[i].draw();
+            }
+            if (boss.MainDot.y < 460) {
+                currentMenuState = GAME_MODE_BOSS_FIGHT;
+                glutPostRedisplay();
+            }
+            myjet.draw();
+            boss.draw();
+            glutPostRedisplay();
+            break;
+        }
+    case GAME_MODE_BOSS_FIGHT:
+        if (currentMenuState == GAME_MODE_BOSS_FIGHT) {
+            for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
+                MyBullets[i].move_bullet(15);
+                if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
+            }
+            for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
+                if (boss.is_hit(MyBullets[j].center)) {
+                    delete_mybullets.push_back(j);
+                    boss.HP--;
+                    cout << "BOSS HIT" << endl;
+                    if (boss.HP == 0) {
+                        currentMenuState = WIN_STATE;
+                        cout << "YOU WIN" << endl;
+                        glutPostRedisplay();
                         break;
                     }
                 }
             }
-        }
-        for (int i = 0; i < delete_enemy1.size(); ++i) { // удаление пуль и противников
-            Enemies1.erase(Enemies1.begin() + delete_enemy1[i]);
-        }
-        for (int i = 0; i < delete_enemy2.size(); ++i) { // удаление пуль и противников
-            Enemies2.erase(Enemies2.begin() + delete_enemy2[i]);
-        }
-        for (int i = 0; i < delete_mybullets.size(); ++i) {
-            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
-        }
-        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
-            EnemyBullets[i].move_bullet(-15);
-            if (EnemyBullets[i].center.y < -1050) { 
-                EnemyBullets.erase(EnemyBullets.begin() + i); 
-                i--;
+            for (int i = 0; i < delete_mybullets.size(); ++i) {
+                MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
             }
-        }
-        /*for (int i = 0; i < delete_enemybullets.size(); ++i) {
-            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
-        }*/
-        delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
-        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
-            if (myjet.is_hit(EnemyBullets[i].center)) {
-                delete_enemybullets.push_back(i);
-                myjet.HP--;
-                if (myjet.HP == 0) {
-                    currentMenuState = LOSE_STATE;
-                    glutPostRedisplay();
+            for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+                EnemyBullets[i].move_bullet(-15);
+                if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
+            }
+            for (int i = 0; i < delete_enemybullets.size(); ++i) {
+                EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+            }
+            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+            for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
+                if (myjet.is_hit(EnemyBullets[i].center)) {
+                    delete_enemybullets.push_back(i);
+                    myjet.HP--;
+                    if (myjet.HP == 0) {
+                        cout << "YOU LOSE" << endl;
+                        currentMenuState = LOSE_STATE;
+                        glutPostRedisplay();
+                    }
                 }
             }
-        }
-        for (int i = 0; i < delete_enemybullets.size(); ++i) {
-            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
-        }
-        delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
-
-        for (int i = 0; i < MyBullets.size(); i++) {
-            MyBullets[i].draw();
-        }
-        for (int i = 0; i < EnemyBullets.size(); i++) {
-            EnemyBullets[i].draw();
-        }
-        for (int i = 0; i < Enemies1.size(); i++) {
-            Enemies1[i].draw();
-            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
-            EnemyHP.setColor(0.15, 0.27, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
-        }
-        for (int i = 0; i < Enemies2.size(); i++) {
-            Enemies2[i].draw();
-            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
-            EnemyHP.setColor(0.56, 0.2, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
-        }
-
-        Exit_Game.drawButton();
-        Health.drawButton();
-        Kills.drawButton();
-        myjet.draw();
-        glutPostRedisplay();
-        break;
-    case GAME_MODE_BOSS_ENTRANCE:
-        for (int i = 0; i < Enemies1.size(); i++) {
-            Enemies1[i].draw();
-        }
-        for (int i = 0; i < Enemies2.size(); i++) {
-            Enemies2[i].draw();
-        }
-        if(boss.MainDot.y < 460) {
-            currentMenuState = GAME_MODE_BOSS_FIGHT;
+            for (int i = 0; i < delete_enemybullets.size(); ++i) {
+                EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
+            }
+            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+            if (myjet.is_intersect(boss)) { //проверка столкновения самолетов
+                cout << "YOU LOSE" << endl;
+                currentMenuState = LOSE_STATE;
+                glutPostRedisplay();
+            }
+            boss.draw();
+            bossHP.setColor(0.4, 0.0, 0.0);
+            bossHP.set_text_colors(1.0, 1.0, 1.0);
+            bossHP.drawButton();
+            for (int i = 0; i < MyBullets.size(); i++) {
+                MyBullets[i].draw();
+            }
+            for (int i = 0; i < EnemyBullets.size(); i++) {
+                EnemyBullets[i].draw();
+            }
+            Exit_Game.drawButton();
+            Health.drawButton();
+            Kills.drawButton();
+            myjet.draw();
             glutPostRedisplay();
+            break;
         }
-        myjet.draw();
-        boss.draw();
-        glutPostRedisplay();
-        break;
-    case GAME_MODE_BOSS_FIGHT:
-        for (int i = 0; i < MyBullets.size(); ++i) { //перемещаем все пули 
-            MyBullets[i].move_bullet(15);
-            if (MyBullets[i].center.y > 1050) { delete_mybullets.push_back(i); }
-        }
-        for (int j = 0; j < MyBullets.size(); ++j) {//проверка попаданий по противникам
-            if (boss.is_hit(MyBullets[j].center)) {
-                delete_mybullets.push_back(j);
-                boss.HP--;
-                cout << "BOSS HIT" << endl;
-                if (boss.HP == 0) {
-                    currentMenuState = WIN_STATE;
-                    cout << "YOU WIN" << endl;
-                    glutPostRedisplay();
-                    break;
-                }
-            }
-        }
-        for (int i = 0; i < delete_mybullets.size(); ++i) {
-            MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
-        }
-        for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
-            EnemyBullets[i].move_bullet(-15);
-            if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
-            else if (myjet.is_hit(EnemyBullets[i].center)) {
-                delete_enemybullets.push_back(i);
-                myjet.HP--;
-                if (myjet.HP == 0) {
-                    currentMenuState = LOSE_STATE;
-                    glutPostRedisplay();
-                }
-            }
-        }
-        for (int i = 0; i < delete_enemybullets.size(); ++i) {
-            EnemyBullets.erase(EnemyBullets.begin() + delete_enemybullets[i]);
-        }
-        if (myjet.is_intersect(boss)) {//проверка столкновения самолетов
-            cout << "YOU MET THE BOSS" << endl;
-            currentMenuState = LOSE_STATE;
-            glutPostRedisplay();
-        }
-        boss.draw();
-        bossHP.setColor(0.4, 0.0, 0.0);
-        bossHP.set_text_colors(1.0, 1.0, 1.0);
-        bossHP.drawButton();
-        for (int i = 0; i < MyBullets.size(); i++) {
-            MyBullets[i].draw();
-        }
-        for (int i = 0; i < EnemyBullets.size(); i++) {
-            EnemyBullets[i].draw();
-        }
-        Exit_Game.drawButton();
-        Health.drawButton();
-        Kills.drawButton();
-        myjet.draw();
-        glutPostRedisplay();
-        break;
     case LOSE_STATE:
-        for (int i = 0; i < MyBullets.size(); i++) {
-            MyBullets[i].draw();
+        if (currentMenuState == LOSE_STATE) {
+            for (int i = 0; i < MyBullets.size(); i++) {
+                MyBullets[i].draw();
+            }
+            for (int i = 0; i < EnemyBullets.size(); i++) {
+                EnemyBullets[i].draw();
+            }
+            for (int i = 0; i < Enemies1.size(); i++) {
+                Enemies1[i].draw();
+                Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+                EnemyHP.setColor(0.15, 0.27, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+            for (int i = 0; i < Enemies2.size(); i++) {
+                Enemies2[i].draw();
+                Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+                EnemyHP.setColor(0.56, 0.2, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+
+            Health.drawButton();
+            Lose.drawButton();
+            Button TotalScore = Button(-165, -90, 330, 80, "Total Score: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
+            TotalScore.setColor(0.1,0.0,1.0);
+            TotalScore.drawButton();
+            TryAgain.drawButton();
+            Exit_Game.drawButton();
+            boss.draw();
+            myjet.draw();
+            break;
         }
-        for (int i = 0; i < EnemyBullets.size(); i++) {
-            EnemyBullets[i].draw();
-        }
-        for (int i = 0; i < Enemies1.size(); i++) {
-            Enemies1[i].draw();
-            Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
-            EnemyHP.setColor(0.15, 0.27, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
-        }
-        for (int i = 0; i < Enemies2.size(); i++) {
-            Enemies2[i].draw();
-            Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
-            EnemyHP.setColor(0.56, 0.2, 0);
-            EnemyHP.set_text_colors(1.0, 1.0, 1.0);
-            EnemyHP.drawButton();
-        }
-        Health.drawButton();
-        Kills.drawButton();
-        Exit_Game.drawButton();
-        boss.draw();
-        myjet.draw();
-        break;
     case WIN_STATE:
-        break;
+        if (currentMenuState == WIN_STATE) {
+            for (int i = 0; i < MyBullets.size(); i++) {
+                MyBullets[i].draw();
+            }
+            for (int i = 0; i < EnemyBullets.size(); i++) {
+                EnemyBullets[i].draw();
+            }
+            for (int i = 0; i < Enemies1.size(); i++) {
+                Enemies1[i].draw();
+                Button EnemyHP(Enemies1[i].MainDot.x - 42, Enemies1[i].MainDot.y + 150, 82, 60, "HP:" + to_string(Enemies1[i].HP), 2);
+                EnemyHP.setColor(0.15, 0.27, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+            for (int i = 0; i < Enemies2.size(); i++) {
+                Enemies2[i].draw();
+                Button EnemyHP(Enemies2[i].MainDot.x - 40, Enemies2[i].MainDot.y + 210, 80, 60, "HP:" + to_string(Enemies2[i].HP), 2);
+                EnemyHP.setColor(0.56, 0.2, 0);
+                EnemyHP.set_text_colors(1.0, 1.0, 1.0);
+                EnemyHP.drawButton();
+            }
+
+            Health.drawButton();
+            boss.draw();
+            myjet.draw();
+            Win.drawButton();
+            Button TotalScore = Button(-165, -90, 330, 80, "Total Score: " + to_string(EnemyLvl1count + EnemyLvl2count + 1), 1);
+            TotalScore.setColor(0.1, 0.0, 1.0);
+            TotalScore.drawButton();
+            PlayAgain.drawButton();
+            Exit_Game.drawButton();
+            break;
+        }
     default:
         break;
     }
@@ -635,7 +748,7 @@ void TimerFunction(int value) {
             boss.MainDot = Point(-6, 0);
         }
         else if(rand() % 40 == 1) {
-            boss.MovePoint = Point(rand() % 20 - 10, 0);
+            boss.MovePoint = Point(rand() % 30 - 15, 0);
         }
     }
     glutPostRedisplay();

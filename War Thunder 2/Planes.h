@@ -176,13 +176,13 @@ struct JetLvl2 : public FigterJet
 
 		glColor3f(0.2, 0.2, 0.2); //отрисовка турбин самолета
 		glBegin(GL_POLYGON);//Передние крылья
-		glVertex2f(MainDot.x - 45, MainDot.y + 260);
+		glVertex2f(MainDot.x - 40, MainDot.y + 260);
 		glVertex2f(MainDot.x - 10, MainDot.y + 260);
 		glVertex2f(MainDot.x - 15, MainDot.y + 400);
 		glVertex2f(MainDot.x - 40, MainDot.y + 400);
 		glEnd();
 		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x + 45, MainDot.y + 260);
+		glVertex2f(MainDot.x + 40, MainDot.y + 260);
 		glVertex2f(MainDot.x + 10, MainDot.y + 260);
 		glVertex2f(MainDot.x + 15, MainDot.y + 400);
 		glVertex2f(MainDot.x + 40, MainDot.y + 400);
@@ -507,5 +507,9 @@ struct MyJet : public FigterJet{
 			if (Enemy.is_hit(MyJetVerts[i])) { return true; }
 		}
 		return false;
+	}
+
+	MyJet to_default() {
+		return MyJet(Point(0, -800), 30);
 	}
 };
