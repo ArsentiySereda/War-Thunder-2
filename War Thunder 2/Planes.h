@@ -279,30 +279,19 @@ struct BOSS : public FigterJet {
 		glVertex2f(MainDot.x + 350, MainDot.y + 250);
 		glEnd();
 
-		glColor3f(1.0, 1.0, 1.0);//построение стекла кабины
+		glColor3f(0.8,0.8,0.8);//построение стекла кабины
 		glBegin(GL_TRIANGLE_STRIP);
 		glVertex2f(MainDot.x - 150, MainDot.y + 50);
+		glVertex2f(MainDot.x - 120, MainDot.y + 50);
 		glVertex2f(MainDot.x - 50, MainDot.y - 15);
+		glVertex2f(MainDot.x - 50, MainDot.y + 5);
 		glVertex2f(MainDot.x + 50, MainDot.y - 15);
+		glVertex2f(MainDot.x + 50, MainDot.y + 5);
 		glVertex2f(MainDot.x + 150, MainDot.y + 50);
 		glVertex2f(MainDot.x + 120, MainDot.y + 50);
-		glVertex2f(MainDot.x + 50, MainDot.y + 5);
-		glVertex2f(MainDot.x - 50, MainDot.y + 5);
-		glVertex2f(MainDot.x - 120, MainDot.y + 50);
-		glVertex2f(MainDot.x - 150, MainDot.y + 50);
 		glEnd();
 
-		glColor3f(0.7, 0.7, 0.7);//построение стекла кабины
-		glBegin(GL_POLYGON);
-		glVertex2f(MainDot.x - 150, MainDot.y - 5 + 50);
-		glVertex2f(MainDot.x - 50, MainDot.y - 5 - 15);
-		glVertex2f(MainDot.x + 50, MainDot.y - 5 - 15);
-		glVertex2f(MainDot.x + 150, MainDot.y - 5 + 50);
-		glVertex2f(MainDot.x + 120, MainDot.y - 5 + 50);
-		glVertex2f(MainDot.x + 50, MainDot.y - 5 + 5);
-		glVertex2f(MainDot.x - 50, MainDot.y - 5 + 5);
-		glVertex2f(MainDot.x - 120, MainDot.y - 5 + 50);
-		glEnd();
+		
 
 		glColor3f(0.0, 0.0, 0.0);
 		glBegin(GL_POLYGON);
@@ -510,6 +499,6 @@ struct MyJet : public FigterJet{
 	}
 
 	MyJet to_default() {
-		return MyJet(Point(0, -800), 30);
+		return MyJet(Point(0, -800), 20);
 	}
 };

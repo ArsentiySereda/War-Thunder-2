@@ -48,7 +48,7 @@ void DrawOs() {
     }
 }
 
-MyJet myjet = MyJet(Point(0,-800), 30);
+MyJet myjet = MyJet(Point(0,-800), 3);
 vector <JetLvl1> Enemies1;
 vector <JetLvl2> Enemies2;
 BOSS boss = BOSS(Point(0, 1100),20);
@@ -133,6 +133,7 @@ Button PlayAgain (-165, -190, 330, 80, "PLAY AGAIN", 1);
 Button Exit_Game(690, -980, 300, 80, "EXIT GAME", 1);
 Point MovePoint(0.0,0.0);
 
+
 void mouseClickHandler(int button, int state, int x, int y) {
     // Проверка нажатия левой кнопки мыши
     setlocale(LC_ALL, "rus");
@@ -161,6 +162,7 @@ void mouseClickHandler(int button, int state, int x, int y) {
                 MyBullets.erase(MyBullets.begin(), MyBullets.end());
                 EnemyBullets.erase(EnemyBullets.begin(), EnemyBullets.end());
                 boss = BOSS(Point(0, 1100), 20);
+                currentMenuState = MAIN;
                 glutPostRedisplay();
             }
             else {
@@ -260,8 +262,8 @@ void RenderScene(void) {
     Start.set_text_colors(0.0, 0.0, 0.0);
     Exit_Game.setColor(1.0, 0.0, 0.0);
     Exit_Game.set_text_colors(0.0, 0.0, 0.0);
-    Button Health(-900, -980, 175, 80, "HP " + to_string(myjet.HP), 1);
-    Button Kills(-700, -980, 250, 80, "Kills: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
+    Button Health(-900, -980, myjet.HP * 40, 80, "HP " + to_string(myjet.HP), 1);
+    Button Kills(-900, -870, 250, 80, "Kills: " + to_string(EnemyLvl1count + EnemyLvl2count), 1);
     Button bossHP(boss.MainDot.x - 75, boss.MainDot.y + 150, 150, 80, "HP:" + to_string(boss.HP), 1);
     Button Lose(-135, 10, 270, 80, "YOU LOSE", 1);
     Button Win(-130, 10, 260, 80, "YOU WIN", 1);
@@ -427,7 +429,9 @@ void RenderScene(void) {
                     i--;
                 }
             }
-            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+            if (delete_enemybullets.size() != 0) {
+                delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
+            }
             for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
                 if (myjet.is_hit(EnemyBullets[i].center)) {
                     delete_enemybullets.push_back(i);
@@ -499,7 +503,6 @@ void RenderScene(void) {
                 if (boss.is_hit(MyBullets[j].center)) {
                     delete_mybullets.push_back(j);
                     boss.HP--;
-                    cout << "BOSS HIT" << endl;
                     if (boss.HP == 0) {
                         currentMenuState = WIN_STATE;
                         cout << "YOU WIN" << endl;
@@ -511,6 +514,7 @@ void RenderScene(void) {
             for (int i = 0; i < delete_mybullets.size(); ++i) {
                 MyBullets.erase(MyBullets.begin() + delete_mybullets[i]);
             }
+            delete_enemybullets.erase(delete_enemybullets.begin(), delete_enemybullets.end());
             for (int i = 0; i < EnemyBullets.size(); ++i) { //проверка попадания в мой самолет
                 EnemyBullets[i].move_bullet(-15);
                 if (EnemyBullets[i].center.y < -1050) { delete_enemybullets.push_back(i); }
@@ -837,37 +841,27 @@ void keyboardFunc(unsigned char key, int x, int y)
         switch (key) {
         case 'w':
         case 'W':
-            cout << "W is pressed" << endl;
             MovePoint = Point(0, 15);
             glutPostRedisplay();
             break;
         case 'a':
         case 'A':
-            cout << "A is pressed" << endl;
             MovePoint = Point(-15, 0);
             glutPostRedisplay();
             break;
         case 's':
         case 'S':
-            cout << "S is pressed" << endl;
             MovePoint = Point(0, -15);
             glutPostRedisplay();
             break;
         case 'd':
         case 'D':
-            cout << "D is pressed" << endl;
             MovePoint = Point(15, 0);
             glutPostRedisplay();
             break;
         case 27: // Escape key
             exit(0);
             break;
-        case 32:
-            /*MyBullets.push_back(Bullet(15, { 1.0,0.0,0.0 }, myjet.MainDot));
-            isKeyPressed = false;
-            MovePoint = Point(0, 0);
-            glutPostRedisplay();
-            break;*/
         default:
             MovePoint = Point(0, 0);
             glutPostRedisplay();
