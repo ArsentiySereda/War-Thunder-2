@@ -34,5 +34,8 @@
     <Text Include="Координаты для самолетов.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="Руководство по игре.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
 </Project>

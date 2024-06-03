@@ -497,8 +497,5 @@ struct MyJet : public FigterJet{
 		}
 		return false;
 	}
-
-	MyJet to_default() {
-		return MyJet(Point(0, -800), 20);
-	}
+	
 };

@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Координаты для самолетов.txt" />
+    <Text Include="Руководство по игре.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

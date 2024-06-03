@@ -48,10 +48,16 @@ void DrawOs() {
     }
 }
 
-MyJet myjet = MyJet(Point(0,-800), 3);
+MyJet myjet = MyJet(Point(0,-800), 10);
 vector <JetLvl1> Enemies1;
 vector <JetLvl2> Enemies2;
 BOSS boss = BOSS(Point(0, 1100),20);
+
+const int mygetHP = myjet.HP;
+
+MyJet to_default() {
+    return MyJet(Point(0, -800), mygetHP);
+}
 
 class Button {
 private:
@@ -156,7 +162,7 @@ void mouseClickHandler(int button, int state, int x, int y) {
         case GAME_MODE_1:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet.to_default();
+                myjet = to_default();
                 Enemies1.erase(Enemies1.begin(), Enemies1.end());
                 Enemies2.erase(Enemies2.begin(), Enemies2.end());
                 MyBullets.erase(MyBullets.begin(), MyBullets.end());
@@ -174,7 +180,7 @@ void mouseClickHandler(int button, int state, int x, int y) {
         case GAME_MODE_2:
             if (Exit_Game.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet.to_default();
+                myjet = to_default();
                 Enemies1.erase(Enemies1.begin(), Enemies1.end());
                 Enemies2.erase(Enemies2.begin(), Enemies2.end());
                 MyBullets.erase(MyBullets.begin(), MyBullets.end());
@@ -216,7 +222,7 @@ void mouseClickHandler(int button, int state, int x, int y) {
             }
             else if(TryAgain.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet.to_default();
+                myjet = to_default();
                 Enemies1.erase(Enemies1.begin(), Enemies1.end());
                 Enemies2.erase(Enemies2.begin(), Enemies2.end());
                 MyBullets.erase(MyBullets.begin(), MyBullets.end());
@@ -234,7 +240,7 @@ void mouseClickHandler(int button, int state, int x, int y) {
             }
             else if (PlayAgain.isButtonHovered(najatie)) {
                 MovePoint = Point(0, 0);
-                myjet.to_default();
+                myjet = to_default();
                 Enemies1.erase(Enemies1.begin(), Enemies1.end());
                 Enemies2.erase(Enemies2.begin(), Enemies2.end());
                 MyBullets.erase(MyBullets.begin(), MyBullets.end());
